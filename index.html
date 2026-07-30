@@ -1,0 +1,1499 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>3D Rubik's Cube</title>
+  <!-- Home Screen / standalone web-app support (iOS "Add to Home Screen") -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="ルービックキューブ">
+  <meta name="theme-color" content="#121214">
+  <link rel="apple-touch-icon" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAALQAAAC0CAIAAACyr5FlAAAEEUlEQVR4nO3dsW0cRxTH4aPhCkgrdyOGMkeuwG5DZagNqQJHzgw14twma3BARgf9FzO3b95yye/L795B/OEdlhBn7u7vf7rA9/xw9Afg9RIHkTiIxEEkDiJxEImDSBxE4iASB5E4iMRBJA4icRCJg0gcROIgEgeROIjEQSQOoh9XvOnjr/+Vv+fDX7f/L/mnz78VfpJn95/+vPm1j98W/Pv8Uv9XBHe1f5qwIosrU5WsyOLKVCUrsrhSWEnl10pDGVNTGsqYmtJQRu2Usjh6yhif1VPG+KyeMmpn1cTRWcbIxM4yRiZ2llE40dMKUUEc/Wtje27/2tie2782qubaHETiIBIHkTiIxEEkDiJxEImDSBxE4iASB5E4iMRBJA4icRCJg0gcROIgEgeROIjEQSQOInEQiYNIHETiIBIHUUEce87cWTF3z5k7e6S5K87cGbF/rs1BdNY4jlpXyVHrKilZVzVx+FFtO+qbZaeyzdHZx8iszj5GZnX2UTXrZKcJzia4+iCX2QRXH+RSm2BxHM+cQ7rtnZ5Dylty1qcVGoiDSBxE4iASB5E4iNbct/L4b/l7Pjx8uPm1Xy4/132QF39c/rn5tU8fv9Z9kBf3f/9e/p7VvyFdkMWVqUpWZHFlqpIVWVwprKT0vpX1ZUxNaShjakpDGbVT6u5baSljfFZPGeOzesqonVV030pjGSMTO8sYmdhZRuFETytEFfettK+N7bn9a2N7bv/aqJprcxCJg0gcROIgEgeROIjEQSQOInEQiYNIHETiIBIHkTiIxEEkDiJxEImDSBxE4iASB5E4iMRBJA4icRCJg0gcRBX3rew4c2fF3D1n7uyR5q44c2fE/rk2B9FZ4zhqXSVHraukZF0V3bfiR7XpqG+WneruW2nsY2RWZx8jszr7qJp1stMEZxNcfZDLbIKrD3KpTXDNfSvOId30Ts8h5S0569MKDcRBJA4icRCJg0gcREvuW3GP67bXdu9uUvx7jtU3QF8mK1l9A/RlspLVN3ZfSiup/FppKGNqSkMZU1MayqidUhZHTxnjs3rKGJ/VU0btrJo4OssYmdhZxsjEzjIKJ3paISqIo39tbM/tXxvbc/vXRtVcm4NIHETiIBIHkTiIxEEkDiJxEImDSBxE4iASB5E4iMRBJA4icRCJg0gcROIgEgeROIjEQSQOInEQiYNIHETiICqIY8+ZOyvm7jlzZ480d8WZOyP2z7U5iM4ax1HrKjlqXSUl66omDj+qbUd9s+xUtjk6+xiZ1dnHyKzOPqpmnew0wdkEVx/kMpvg6oNcahNccqWGc0i3vdNzSHlLzvq0QgNxEImDSBxE4iASB5E4iMRBJA4icRCJg0gcROIgEgeROIjEQSQOInEQiYNIHET/A2ThLQeMzAUsAAAAAElFTkSuQmCC">
+  <link rel="icon" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAALQAAAC0CAIAAACyr5FlAAAEEUlEQVR4nO3dsW0cRxTH4aPhCkgrdyOGMkeuwG5DZagNqQJHzgw14twma3BARgf9FzO3b95yye/L795B/OEdlhBn7u7vf7rA9/xw9Afg9RIHkTiIxEEkDiJxEImDSBxE4iASB5E4iMRBJA4icRCJg0gcROIgEgeROIjEQSQOoh9XvOnjr/+Vv+fDX7f/L/mnz78VfpJn95/+vPm1j98W/Pv8Uv9XBHe1f5qwIosrU5WsyOLKVCUrsrhSWEnl10pDGVNTGsqYmtJQRu2Usjh6yhif1VPG+KyeMmpn1cTRWcbIxM4yRiZ2llE40dMKUUEc/Wtje27/2tie2782qubaHETiIBIHkTiIxEEkDiJxEImDSBxE4iASB5E4iMRBJA4icRCJg0gcROIgEgeROIjEQSQOInEQiYNIHETiIBIHUUEce87cWTF3z5k7e6S5K87cGbF/rs1BdNY4jlpXyVHrKilZVzVx+FFtO+qbZaeyzdHZx8iszj5GZnX2UTXrZKcJzia4+iCX2QRXH+RSm2BxHM+cQ7rtnZ5Dylty1qcVGoiDSBxE4iASB5E4iNbct/L4b/l7Pjx8uPm1Xy4/132QF39c/rn5tU8fv9Z9kBf3f/9e/p7VvyFdkMWVqUpWZHFlqpIVWVwprKT0vpX1ZUxNaShjakpDGbVT6u5baSljfFZPGeOzesqonVV030pjGSMTO8sYmdhZRuFETytEFfettK+N7bn9a2N7bv/aqJprcxCJg0gcROIgEgeROIjEQSQOInEQiYNIHETiIBIHkTiIxEEkDiJxEImDSBxE4iASB5E4iMRBJA4icRCJg0gcRBX3rew4c2fF3D1n7uyR5q44c2fE/rk2B9FZ4zhqXSVHraukZF0V3bfiR7XpqG+WneruW2nsY2RWZx8jszr7qJp1stMEZxNcfZDLbIKrD3KpTXDNfSvOId30Ts8h5S0569MKDcRBJA4icRCJg0gcREvuW3GP67bXdu9uUvx7jtU3QF8mK1l9A/RlspLVN3ZfSiup/FppKGNqSkMZU1MayqidUhZHTxnjs3rKGJ/VU0btrJo4OssYmdhZxsjEzjIKJ3paISqIo39tbM/tXxvbc/vXRtVcm4NIHETiIBIHkTiIxEEkDiJxEImDSBxE4iASB5E4iMRBJA4icRCJg0gcROIgEgeROIjEQSQOInEQiYNIHETiICqIY8+ZOyvm7jlzZ480d8WZOyP2z7U5iM4ax1HrKjlqXSUl66omDj+qbUd9s+xUtjk6+xiZ1dnHyKzOPqpmnew0wdkEVx/kMpvg6oNcahNccqWGc0i3vdNzSHlLzvq0QgNxEImDSBxE4iASB5E4iMRBJA4icRCJg0gcROIgEgeROIjEQSQOInEQiYNIHET/A2ThLQeMzAUsAAAAAElFTkSuQmCC">
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+    body {
+      background-color: #121214;
+      color: #ffffff;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+    }
+    #header {
+      padding: 10px 12px 10px;
+      padding-top: calc(10px + env(safe-area-inset-top));
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 8px;
+      background: rgba(255, 255, 255, 0.05);
+      backdrop-filter: blur(10px);
+      z-index: 10;
+      flex-shrink: 0;
+    }
+    .timer-box {
+      display: flex;
+      flex-direction: column;
+    }
+    .timer-label {
+      font-size: 10px;
+      color: #aaa;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+    #timer {
+      font-size: 24px;
+      font-weight: 700;
+      font-family: monospace;
+      color: #00ffcc;
+    }
+    #best-time {
+      font-size: 12px;
+      color: #ffd700;
+      margin-top: 2px;
+    }
+    .top-btns {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+      gap: 6px;
+    }
+    .action-btn {
+      background: #2a2a32;
+      color: #fff;
+      border: 1px solid #444;
+      padding: 7px 10px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+    .action-btn:active {
+      background: #00ffcc;
+      color: #000;
+    }
+    .action-btn.active {
+      background: #00ffcc;
+      color: #000;
+      border-color: #00ffcc;
+    }
+    #canvas-container {
+      flex: 1;
+      min-height: 0;
+      width: 100%;
+      position: relative;
+      touch-action: none;
+    }
+    #controls {
+      padding: 8px 12px 12px;
+      padding-bottom: calc(12px + env(safe-area-inset-bottom));
+      background: rgba(0, 0, 0, 0.4);
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      z-index: 10;
+      flex-shrink: 0;
+    }
+    .controls-label {
+      font-size: 11px;
+      color: #999;
+      text-align: center;
+      margin-bottom: 2px;
+      letter-spacing: 0.5px;
+    }
+    .mode-indicator {
+      display: none;
+      font-size: 11px;
+      font-weight: 700;
+      color: #ffd700;
+      text-align: center;
+      margin-bottom: 4px;
+      letter-spacing: 0.3px;
+    }
+    .mode-indicator.show {
+      display: block;
+    }
+    .wide-grid {
+      margin-bottom: 2px;
+    }
+    .wide-spacer {
+      pointer-events: none;
+    }
+    /* Same face, same color as the single-layer button below it -- Lw/Rw
+       are still fundamentally "L" and "R", just grabbing the middle layer
+       along with them -- so the badge is the only thing distinguishing it
+       from its single-layer counterpart. */
+    .wide-card::before {
+      content: '2層';
+      position: absolute;
+      top: 5px;
+      right: 8px;
+      font-size: 8px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      color: var(--fc-text);
+      opacity: 0.6;
+      pointer-events: none;
+    }
+    /* The middle slice has no sticker of its own -- it's the column between
+       L and R -- so its card is split into both of those faces' current
+       colors instead of one solid fill, making the "it's the layer between
+       these two" relationship visible rather than stated. */
+    .slice-card {
+      --fc-left: #FF5800;
+      --fc-right: #B71234;
+      width: 100%;
+      background: linear-gradient(90deg, var(--fc-left) 0 50%, var(--fc-right) 50% 100%);
+    }
+    /* The arrows sit on a gradient, not a single flat color, so a
+       per-side text color can end up low-contrast against whatever
+       happens to be behind it at a given cube orientation. A fixed dark
+       badge (matching the H letter's own badge) keeps them reliably
+       visible no matter what colors --fc-left/--fc-right currently are. */
+    .slice-card .edge-hint {
+      min-width: 24px;
+      height: 24px;
+      padding: 0 3px;
+      border-radius: 999px;
+      background: rgba(0, 0, 0, 0.5);
+      color: #ffffff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .slice-card .face-letter {
+      padding: 3px 12px;
+      border-radius: 8px;
+      background: rgba(0, 0, 0, 0.55);
+      color: #fff;
+      font-size: 16px;
+    }
+
+    /* One card per cube face: a solid block of the face's real sticker
+       color. Slide it -- right to turn normally, left to reverse -- rather
+       than tapping a zone, so the direction you push is the direction it
+       spins. Color is the primary cue ("slide the orange one"), the edge
+       arrows light up as you drag past the commit point, and the letter is
+       there for anyone who already knows cube notation. */
+    .face-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+    }
+    .face-card {
+      --fc: #23232c;
+      --fc-text: #ffffff;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 62px;
+      padding: 0 12px;
+      border-radius: 14px;
+      overflow: hidden;
+      background: var(--fc);
+      box-shadow: 0 3px 0 rgba(0, 0, 0, 0.35), inset 0 0 0 1px rgba(255, 255, 255, 0.15);
+      touch-action: pan-y;
+      cursor: grab;
+      user-select: none;
+      position: relative;
+    }
+    .face-card::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(circle at var(--ripple-origin, 50%) 50%, rgba(255, 255, 255, 0.55) 0%, rgba(255, 255, 255, 0) 70%);
+      opacity: 0;
+      pointer-events: none;
+    }
+    .face-letter {
+      font-size: 19px;
+      font-weight: 800;
+      color: var(--fc-text);
+      pointer-events: none;
+      transition: transform 0.18s cubic-bezier(.34, 1.56, .64, 1);
+    }
+    .edge-hint {
+      font-size: 20px;
+      font-weight: 900;
+      color: var(--fc-text);
+      opacity: 0.35;
+      pointer-events: none;
+      transition: opacity 0.12s, transform 0.12s;
+    }
+    /* Slide "juice": the letter eases back to center, the winning edge
+       arrow briefly pops, and a bright ripple flashes from whichever side
+       was pushed -- so the card visibly snaps back like the physical
+       cube's click. Re-triggered from JS on every committed slide. */
+    .face-card.zap {
+      animation: zapScale 0.32s cubic-bezier(.34, 1.56, .64, 1);
+    }
+    .face-card.zap::after {
+      animation: zapRipple 0.42s ease-out;
+    }
+    .face-card.zap.dir-right .edge-hint.right,
+    .face-card.zap.dir-left .edge-hint.left {
+      animation: zapArrow 0.32s ease-out;
+    }
+    .face-card.dragging {
+      cursor: grabbing;
+      filter: brightness(1.08);
+    }
+    @keyframes zapScale {
+      0% { filter: brightness(1); }
+      35% { filter: brightness(1.5); }
+      100% { filter: brightness(1); }
+    }
+    @keyframes zapRipple {
+      0% { opacity: 0.9; }
+      100% { opacity: 0; }
+    }
+    @keyframes zapArrow {
+      0% { opacity: 1; transform: scale(1.5); }
+      100% { opacity: 0.35; transform: scale(1); }
+    }
+    #msg {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%) scale(0.7);
+      background: rgba(0, 0, 0, 0.85);
+      border: 2px solid #00ffcc;
+      color: #00ffcc;
+      padding: 16px 24px;
+      border-radius: 12px;
+      font-size: 20px;
+      font-weight: bold;
+      text-align: center;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.3s;
+      z-index: 20;
+    }
+    #msg.pop {
+      animation: msgPop 0.55s cubic-bezier(.34, 1.56, .64, 1);
+      animation-fill-mode: forwards;
+    }
+    @keyframes msgPop {
+      0% { transform: translate(-50%, -50%) scale(0.6); box-shadow: 0 0 0 rgba(0, 255, 204, 0); }
+      55% { transform: translate(-50%, -50%) scale(1.08); box-shadow: 0 0 40px rgba(0, 255, 204, 0.55); }
+      100% { transform: translate(-50%, -50%) scale(1); box-shadow: 0 0 20px rgba(0, 255, 204, 0.25); }
+    }
+    #settings-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.75);
+      z-index: 30;
+      align-items: center;
+      justify-content: center;
+    }
+    #settings-panel {
+      background: #1c1c22;
+      border: 1px solid #3a3a48;
+      border-radius: 14px;
+      padding: 20px;
+      width: min(90vw, 360px);
+      text-align: center;
+    }
+    #settings-panel h2 {
+      font-size: 16px;
+      margin-bottom: 6px;
+    }
+    .settings-hint {
+      font-size: 12px;
+      color: #aaa;
+      margin-bottom: 14px;
+    }
+    .settings-toggle-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 6px;
+    }
+    .settings-toggle-label {
+      font-size: 13px;
+      font-weight: 600;
+      color: #fff;
+      text-align: left;
+    }
+    .toggle-switch {
+      flex: 0 0 auto;
+      width: 46px;
+      height: 26px;
+      border-radius: 13px;
+      border: 1px solid #3a3a48;
+      background: #23232c;
+      position: relative;
+      cursor: pointer;
+      padding: 0;
+      transition: background 0.15s, border-color 0.15s;
+    }
+    .toggle-switch .toggle-knob {
+      position: absolute;
+      top: 2px;
+      left: 2px;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: #888;
+      transition: transform 0.18s cubic-bezier(.34, 1.56, .64, 1), background 0.15s;
+    }
+    .toggle-switch.on {
+      background: rgba(0, 255, 204, 0.18);
+      border-color: #00ffcc;
+    }
+    .toggle-switch.on .toggle-knob {
+      transform: translateX(20px);
+      background: #00ffcc;
+    }
+    .toggle-hint {
+      margin-top: -2px;
+    }
+    #settings-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+    .slot-btn {
+      --fc: #23232c;
+      --fc-text: #fff;
+      background: var(--fc);
+      color: var(--fc-text);
+      border: 1px solid #3a3a48;
+      border-radius: 8px;
+      padding: 14px 0 10px;
+      font-size: 18px;
+      font-weight: bold;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+    }
+    .slot-btn.selected {
+      box-shadow: 0 0 0 3px #00ffcc;
+      border-color: #00ffcc;
+    }
+    .settings-actions {
+      display: flex;
+      gap: 8px;
+      justify-content: center;
+    }
+
+    #records-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.75);
+      z-index: 30;
+      align-items: center;
+      justify-content: center;
+    }
+    #records-overlay.show {
+      display: flex;
+    }
+    #records-panel {
+      background: #1c1c22;
+      border: 1px solid #3a3a48;
+      border-radius: 14px;
+      padding: 20px;
+      width: min(90vw, 360px);
+      max-height: 80vh;
+      display: flex;
+      flex-direction: column;
+      text-align: center;
+    }
+    #records-panel h2 {
+      font-size: 16px;
+      margin-bottom: 6px;
+    }
+    #records-best {
+      font-size: 22px;
+      font-weight: 700;
+      font-family: monospace;
+      color: #ffd700;
+      margin-bottom: 10px;
+    }
+    #records-list {
+      overflow-y: auto;
+      margin-bottom: 16px;
+      border-radius: 10px;
+      background: rgba(255, 255, 255, 0.03);
+    }
+    .record-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 12px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+      font-size: 13px;
+    }
+    .record-row:last-child {
+      border-bottom: none;
+    }
+    .record-rank {
+      flex: 0 0 auto;
+      width: 22px;
+      color: #999;
+      font-weight: 700;
+      text-align: right;
+    }
+    .record-row.rank-1 .record-rank { color: #ffd700; }
+    .record-time {
+      flex: 1;
+      text-align: left;
+      font-family: monospace;
+      font-weight: 700;
+      color: #00ffcc;
+    }
+    .record-date {
+      flex: 0 0 auto;
+      color: #888;
+      font-size: 11px;
+    }
+    .records-empty {
+      padding: 24px 12px;
+      color: #888;
+      font-size: 13px;
+    }
+
+    /* Fireworks: small colored sparks burst outward from a few points and
+       fade out, reusing the cube's own sticker colors so the celebration
+       ties back to the thing you just solved. */
+    #fireworks-container {
+      position: absolute;
+      inset: 0;
+      overflow: hidden;
+      pointer-events: none;
+      z-index: 18;
+    }
+    .fw-particle {
+      position: absolute;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      margin: -4px 0 0 -4px;
+      animation-name: fw-burst;
+      animation-timing-function: cubic-bezier(.12, .7, .3, 1);
+      animation-fill-mode: forwards;
+      box-shadow: 0 0 6px currentColor;
+    }
+    @keyframes fw-burst {
+      0% { transform: translate(0, 0) scale(1); opacity: 1; }
+      75% { opacity: 1; }
+      100% { transform: translate(var(--dx), var(--dy)) scale(0.25); opacity: 0; }
+    }
+  </style>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+</head>
+<body>
+
+  <div id="header">
+    <div class="timer-box">
+      <span class="timer-label">TIME</span>
+      <div id="timer">00:00.00</div>
+      <div id="best-time">BEST: --:--.--</div>
+    </div>
+    <div class="top-btns">
+      <button class="action-btn" id="records-btn">🏆 記録</button>
+      <button class="action-btn" id="settings-btn">⚙️ 設定</button>
+      <button class="action-btn" id="scramble-btn">🔀 シャッフル</button>
+      <button class="action-btn" id="reset-btn">↺ リセット</button>
+    </div>
+  </div>
+
+  <div id="canvas-container">
+    <div id="fireworks-container" aria-hidden="true"></div>
+    <div id="msg">SOLVED! 🎉</div>
+  </div>
+
+  <div id="controls">
+    <div class="controls-label">← スライドで逆回転／正回転 スライドで →</div>
+    <div class="mode-indicator" id="mode-indicator">🎨 固定色モード（設定でON/OFFを切替できます）</div>
+    <div class="face-grid wide-grid" id="wide-grid">
+      <div class="face-card wide-card" id="lw-card" data-slot="6" role="button" tabindex="0">
+        <span class="edge-hint left">‹</span>
+        <span class="face-letter"></span>
+        <span class="edge-hint right">›</span>
+      </div>
+      <div class="wide-spacer" aria-hidden="true"></div>
+      <div class="face-card wide-card" id="rw-card" data-slot="7" role="button" tabindex="0">
+        <span class="edge-hint left">‹</span>
+        <span class="face-letter">Rw</span>
+        <span class="edge-hint right">›</span>
+      </div>
+    </div>
+    <div class="face-grid" id="face-grid">
+      <div class="face-card" data-slot="0" role="button" tabindex="0">
+        <span class="edge-hint left">‹</span>
+        <span class="face-letter"></span>
+        <span class="edge-hint right">›</span>
+      </div>
+      <div class="face-card" data-slot="1" role="button" tabindex="0">
+        <span class="edge-hint left">‹</span>
+        <span class="face-letter"></span>
+        <span class="edge-hint right">›</span>
+      </div>
+      <div class="face-card" data-slot="2" role="button" tabindex="0">
+        <span class="edge-hint left">‹</span>
+        <span class="face-letter"></span>
+        <span class="edge-hint right">›</span>
+      </div>
+      <div class="face-card" data-slot="3" role="button" tabindex="0">
+        <span class="edge-hint left">‹</span>
+        <span class="face-letter"></span>
+        <span class="edge-hint right">›</span>
+      </div>
+      <div class="face-card" data-slot="4" role="button" tabindex="0">
+        <span class="edge-hint left">‹</span>
+        <span class="face-letter"></span>
+        <span class="edge-hint right">›</span>
+      </div>
+      <div class="face-card" data-slot="5" role="button" tabindex="0">
+        <span class="edge-hint left">‹</span>
+        <span class="face-letter"></span>
+        <span class="edge-hint right">›</span>
+      </div>
+    </div>
+
+    <div class="face-card slice-card" id="h-card" role="button" tabindex="0" aria-label="ミドル層H：右にスライドでLと同じ向き、左でRと同じ向き">
+      <span class="edge-hint left">‹</span>
+      <span class="face-letter">H</span>
+      <span class="edge-hint right">›</span>
+    </div>
+  </div>
+
+
+  <div id="settings-overlay">
+    <div id="settings-panel">
+      <h2>ボタン配置設定</h2>
+
+      <div class="settings-toggle-row">
+        <span class="settings-toggle-label">回転に合わせて色を変える</span>
+        <button class="toggle-switch on" id="color-sync-toggle" role="switch" aria-checked="true" aria-label="回転に合わせて色を変える">
+          <span class="toggle-knob"></span>
+        </button>
+      </div>
+      <p class="settings-hint toggle-hint">OFFにすると、面の文字ごとの固定色で表示されます</p>
+
+      <p class="settings-hint">入れ替えたい2つのボタンを順にタップ</p>
+      <div id="settings-grid"></div>
+      <div class="settings-actions">
+        <button class="action-btn" id="settings-reset">初期配置に戻す</button>
+        <button class="action-btn" id="settings-close">閉じる</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="records-overlay">
+    <div id="records-panel">
+      <h2>自己記録</h2>
+      <div id="records-best">BEST: --:--.--</div>
+      <p class="settings-hint">ソルブごとの記録（速い順・最大50件）</p>
+      <div id="records-list"></div>
+      <div class="settings-actions">
+        <button class="action-btn" id="records-clear">記録を消去</button>
+        <button class="action-btn" id="records-close">閉じる</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // --- Customizable button layout ---
+    // This section only touches plain DOM/buttons and has zero dependency on
+    // Three.js, so the controls always render correctly even if the 3D engine
+    // below fails to load (e.g. slow network, blocked CDN, WebGL issue).
+    //
+    // Each of the 6 cards is colored with the face's real sticker color, so
+    // recognizing "which face" is a color-match rather than a notation
+    // lookup. The card is split into a left (↺ counter-clockwise) and right
+    // (↻ clockwise) tap zone, so direction is also visual rather than
+    // something you have to remember an apostrophe means.
+    const FACE_COLORS = {
+      U: { bg: '#FFFFFF', text: '#141416' },
+      D: { bg: '#FFD500', text: '#141416' },
+      L: { bg: '#FF5800', text: '#141416' },
+      R: { bg: '#B71234', text: '#ffffff' },
+      F: { bg: '#009E60', text: '#ffffff' },
+      B: { bg: '#0051BA', text: '#ffffff' }
+    };
+    // LW/RW have no sticker of their own -- they're still fundamentally the
+    // L/R faces, just wider -- so they borrow L's/R's color wherever they
+    // end up, and print as "Lw"/"Rw" to match standard wide-move notation.
+    function staticColorFor(letter) {
+      if (letter === 'LW') return FACE_COLORS.L;
+      if (letter === 'RW') return FACE_COLORS.R;
+      return FACE_COLORS[letter];
+    }
+    function displayLabel(letter) {
+      if (letter === 'LW') return 'Lw';
+      if (letter === 'RW') return 'Rw';
+      return letter;
+    }
+    // Grouped as a left-to-right sweep (L, F, R) over the remaining three
+    // (B, U, D), which reads a little more like scanning the cube than the
+    // plain alphabetical order did. LW/RW start above the L/R columns
+    // (slots 6/7, rendered in their own row -- see #wide-grid), but like
+    // every other slot here they're fully re-arrangeable in Settings.
+    const DEFAULT_LAYOUT = ['L', 'F', 'R', 'B', 'U', 'D', 'LW', 'RW'];
+    let buttonLayout = DEFAULT_LAYOUT.slice();
+    let selectedSlotIndex = null;
+    // Whether button colors track the cube's live orientation (dragging the
+    // cube can put a different color where a letter used to be) or stay on
+    // each letter's fixed notation color. Toggled from Settings.
+    let colorSyncEnabled = true;
+
+    const faceGrid = document.getElementById('face-grid');
+    const settingsBtn = document.getElementById('settings-btn');
+    const settingsOverlay = document.getElementById('settings-overlay');
+    const settingsGrid = document.getElementById('settings-grid');
+    const settingsCloseBtn = document.getElementById('settings-close');
+    const settingsResetBtn = document.getElementById('settings-reset');
+    const colorSyncToggle = document.getElementById('color-sync-toggle');
+    const modeIndicator = document.getElementById('mode-indicator');
+
+    function applyColorSyncMode() {
+      colorSyncToggle.classList.toggle('on', colorSyncEnabled);
+      colorSyncToggle.setAttribute('aria-checked', String(colorSyncEnabled));
+      modeIndicator.classList.toggle('show', !colorSyncEnabled);
+      renderControlButtons();
+    }
+    colorSyncToggle.addEventListener('click', () => {
+      colorSyncEnabled = !colorSyncEnabled;
+      applyColorSyncMode();
+    });
+
+    function triggerHaptics(pattern) {
+      if (navigator.vibrate) {
+        try { navigator.vibrate(pattern); } catch (err) { /* unsupported */ }
+      }
+    }
+
+    // Restarting a CSS animation requires removing the class, forcing a
+    // reflow, then re-adding it -- otherwise a rapid second slide on the
+    // same card is silently ignored because the animation is "already
+    // running". originPercent biases the ripple toward whichever side of
+    // the card was pushed.
+    function zap(card, dirClass, originPercent) {
+      card.style.setProperty('--ripple-origin', originPercent + '%');
+      card.classList.remove('zap', 'dir-left', 'dir-right');
+      void card.offsetWidth;
+      card.classList.add('zap', dirClass);
+    }
+
+    // Slide-to-turn: drag right past the commit distance for the normal
+    // move, left for the reverse. The letter eases along with the finger
+    // and the edge arrows light up as the drag approaches the commit
+    // point, so the card previews what will happen before you let go.
+    const SLIDE_MAX = 34;
+    const SLIDE_COMMIT = 20;
+
+    function attachSlideControl(card, onCommit) {
+      const letterEl = card.querySelector('.face-letter');
+      const leftHint = card.querySelector('.edge-hint.left');
+      const rightHint = card.querySelector('.edge-hint.right');
+      let dragging = false;
+      let startX = 0;
+      let dx = 0;
+
+      function updatePreview() {
+        const clamped = Math.max(-SLIDE_MAX, Math.min(SLIDE_MAX, dx));
+        letterEl.style.transform = `translateX(${clamped * 0.6}px)`;
+        const progressRight = Math.max(0, Math.min(1, clamped / SLIDE_COMMIT));
+        const progressLeft = Math.max(0, Math.min(1, -clamped / SLIDE_COMMIT));
+        rightHint.style.opacity = String(0.35 + progressRight * 0.65);
+        leftHint.style.opacity = String(0.35 + progressLeft * 0.65);
+        rightHint.style.transform = `scale(${1 + progressRight * 0.35})`;
+        leftHint.style.transform = `scale(${1 + progressLeft * 0.35})`;
+      }
+
+      function reset() {
+        letterEl.style.transform = '';
+        leftHint.style.opacity = '';
+        rightHint.style.opacity = '';
+        leftHint.style.transform = '';
+        rightHint.style.transform = '';
+      }
+
+      card.addEventListener('pointerdown', (e) => {
+        dragging = true;
+        startX = e.clientX;
+        dx = 0;
+        card.classList.add('dragging');
+        try { card.setPointerCapture(e.pointerId); } catch (err) { /* unsupported */ }
+      });
+
+      card.addEventListener('pointermove', (e) => {
+        if (!dragging) return;
+        dx = e.clientX - startX;
+        updatePreview();
+      });
+
+      function finish(e) {
+        if (!dragging) return;
+        dragging = false;
+        card.classList.remove('dragging');
+        if (e && e.pointerId != null) {
+          try { card.releasePointerCapture(e.pointerId); } catch (err) { /* already released */ }
+        }
+        if (dx >= SLIDE_COMMIT) {
+          triggerHaptics(14);
+          zap(card, 'dir-right', 85);
+          onCommit('cw');
+        } else if (dx <= -SLIDE_COMMIT) {
+          triggerHaptics(14);
+          zap(card, 'dir-left', 15);
+          onCommit('ccw');
+        }
+        reset();
+        dx = 0;
+      }
+
+      card.addEventListener('pointerup', finish);
+      card.addEventListener('pointercancel', finish);
+      card.addEventListener('pointerleave', (e) => { if (dragging) finish(e); });
+    }
+
+    // Wire up every swappable card once (the 6 face slots plus Lw/Rw at
+    // slots 6/7). Each one looks up its current letter from buttonLayout at
+    // slide time, so swapping positions in settings never requires
+    // re-attaching listeners.
+    document.querySelectorAll('.face-card[data-slot]').forEach((card) => {
+      const slot = Number(card.dataset.slot);
+      attachSlideControl(card, (dir) => {
+        makeTurn(dir === 'cw' ? buttonLayout[slot] : buttonLayout[slot] + "'");
+      });
+    });
+
+    // The H card (middle slice, between L and R) is the one control that
+    // stays fixed outside the swappable layout, since it has no single face
+    // of its own to be assigned a position. Sliding right (H) turns the
+    // same way an L turn would; left (H') the same way R would.
+    const hCard = document.getElementById('h-card');
+    attachSlideControl(hCard, (dir) => {
+      makeTurn(dir === 'cw' ? 'H' : "H'");
+    });
+
+    function renderControlButtons() {
+      buttonLayout.forEach((letter, i) => {
+        const card = document.querySelector(`.face-card[data-slot="${i}"]`);
+        const meta = staticColorFor(letter);
+        card.style.setProperty('--fc', meta.bg);
+        card.style.setProperty('--fc-text', meta.text);
+        card.querySelector('.face-letter').textContent = displayLabel(letter);
+        card.classList.toggle('wide-card', letter === 'LW' || letter === 'RW');
+        card.setAttribute('aria-label', displayLabel(letter) + '：右にスライドで正回転、左で逆回転');
+      });
+      // Overrides the fallback colors above with the cube's real current
+      // orientation, once the 3D side has loaded (see --- Three.js Setup ---).
+      if (typeof syncButtonColors === 'function') syncButtonColors();
+    }
+
+    function renderSettingsGrid() {
+      settingsGrid.innerHTML = '';
+      buttonLayout.forEach((letter, i) => {
+        const meta = staticColorFor(letter);
+        const slotBtn = document.createElement('button');
+        slotBtn.className = 'slot-btn' + (selectedSlotIndex === i ? ' selected' : '');
+        slotBtn.style.setProperty('--fc', meta.bg);
+        slotBtn.style.setProperty('--fc-text', meta.text);
+        slotBtn.innerHTML = `<span class="face-label">${displayLabel(letter)}</span>`;
+        slotBtn.addEventListener('click', () => onSlotTap(i));
+        settingsGrid.appendChild(slotBtn);
+      });
+    }
+
+    function onSlotTap(i) {
+      if (selectedSlotIndex === null) {
+        selectedSlotIndex = i;
+      } else if (selectedSlotIndex === i) {
+        selectedSlotIndex = null;
+      } else {
+        const tmp = buttonLayout[selectedSlotIndex];
+        buttonLayout[selectedSlotIndex] = buttonLayout[i];
+        buttonLayout[i] = tmp;
+        selectedSlotIndex = null;
+        renderControlButtons();
+      }
+      renderSettingsGrid();
+    }
+
+    settingsBtn.addEventListener('click', () => {
+      selectedSlotIndex = null;
+      renderSettingsGrid();
+      settingsOverlay.style.display = 'flex';
+    });
+    settingsCloseBtn.addEventListener('click', () => {
+      settingsOverlay.style.display = 'none';
+    });
+    settingsResetBtn.addEventListener('click', () => {
+      buttonLayout = DEFAULT_LAYOUT.slice();
+      selectedSlotIndex = null;
+      renderControlButtons();
+      renderSettingsGrid();
+    });
+
+    renderControlButtons();
+
+    // --- Three.js Setup ---
+    // Wrapped in try/catch: if WebGL or the CDN script fails, the controls
+    // above (already wired up) stay fully visible and usable, and we show a
+    // clear error instead of a silently broken page.
+    try {
+    const container = document.getElementById('canvas-container');
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x121214);
+
+    const camera = new THREE.PerspectiveCamera(42, container.clientWidth / container.clientHeight, 0.1, 100);
+    camera.position.set(4.5, 3.8, 6.5);
+
+    const renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer.setSize(container.clientWidth, container.clientHeight);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    container.appendChild(renderer.domElement);
+
+    // Look slightly below center so the cube itself sits higher in the frame.
+    camera.lookAt(0, -0.9, 0);
+
+    // --- 90°-snapped drag rotation of the cube itself ---
+    // The gesture is locked to a single axis (horizontal swipe = yaw,
+    // vertical swipe = pitch) and always settles on an exact 90° multiple,
+    // so the cube view is never left tilted at a diagonal angle.
+    let isDragging = false;
+    let isSnapping = false;
+    let dragAxis = null; // 'x' (pitch) or 'y' (yaw), decided on first movement
+    let dragStartPointer = { x: 0, y: 0 };
+    let dragBaseQuaternion = new THREE.Quaternion();
+    let dragAngle = 0;
+    const dragRotateSpeed = 0.008;
+    const AXIS_LOCK_THRESHOLD = 6; // px of movement before committing to an axis
+
+    function onDragStart(x, y) {
+      if (isSnapping) return;
+      isDragging = true;
+      dragAxis = null;
+      dragAngle = 0;
+      dragStartPointer.x = x;
+      dragStartPointer.y = y;
+      dragBaseQuaternion.copy(cubeGroup.quaternion);
+    }
+
+    function onDragMove(x, y) {
+      if (!isDragging) return;
+      const totalDx = x - dragStartPointer.x;
+      const totalDy = y - dragStartPointer.y;
+
+      if (!dragAxis) {
+        if (Math.abs(totalDx) < AXIS_LOCK_THRESHOLD && Math.abs(totalDy) < AXIS_LOCK_THRESHOLD) return;
+        dragAxis = Math.abs(totalDx) > Math.abs(totalDy) ? 'y' : 'x';
+      }
+
+      const delta = dragAxis === 'y' ? totalDx : totalDy;
+      dragAngle = delta * dragRotateSpeed;
+      const axisVec = dragAxis === 'y' ? new THREE.Vector3(0, 1, 0) : new THREE.Vector3(1, 0, 0);
+      const q = new THREE.Quaternion().setFromAxisAngle(axisVec, dragAngle);
+      cubeGroup.quaternion.copy(dragBaseQuaternion).premultiply(q);
+    }
+
+    function onDragEnd() {
+      if (!isDragging) return;
+      isDragging = false;
+      if (!dragAxis) return;
+
+      const HALF_PI = Math.PI / 2;
+      const snappedAngle = Math.round(dragAngle / HALF_PI) * HALF_PI;
+      const axisVec = dragAxis === 'y' ? new THREE.Vector3(0, 1, 0) : new THREE.Vector3(1, 0, 0);
+      const rot = new THREE.Quaternion().setFromAxisAngle(axisVec, snappedAngle);
+
+      const startQuaternion = cubeGroup.quaternion.clone();
+      const endQuaternion = dragBaseQuaternion.clone().premultiply(rot);
+
+      isSnapping = true;
+      const duration = 150;
+      const t0 = performance.now();
+      function animateSnap(now) {
+        const p = Math.min((now - t0) / duration, 1);
+        const ease = 1 - Math.pow(1 - p, 3);
+        cubeGroup.quaternion.copy(startQuaternion).slerp(endQuaternion, ease);
+        if (p < 1) {
+          requestAnimationFrame(animateSnap);
+        } else {
+          cubeGroup.quaternion.copy(endQuaternion);
+          isSnapping = false;
+          syncButtonColors();
+        }
+      }
+      requestAnimationFrame(animateSnap);
+      dragAxis = null;
+    }
+
+    renderer.domElement.addEventListener('pointerdown', (e) => {
+      renderer.domElement.setPointerCapture(e.pointerId);
+      onDragStart(e.clientX, e.clientY);
+    });
+    renderer.domElement.addEventListener('pointermove', (e) => {
+      onDragMove(e.clientX, e.clientY);
+    });
+    renderer.domElement.addEventListener('pointerup', onDragEnd);
+    renderer.domElement.addEventListener('pointercancel', onDragEnd);
+    renderer.domElement.addEventListener('pointerleave', onDragEnd);
+
+
+    // Lighting
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.7);
+    scene.add(ambientLight);
+    const dirLight1 = new THREE.DirectionalLight(0xffffff, 0.6);
+    dirLight1.position.set(10, 20, 15);
+    scene.add(dirLight1);
+    const dirLight2 = new THREE.DirectionalLight(0xffffff, 0.3);
+    dirLight2.position.set(-10, -10, -10);
+    scene.add(dirLight2);
+
+    // --- Cube Construction ---
+    const cubeGroup = new THREE.Group();
+    scene.add(cubeGroup);
+
+    const cubies = [];
+    const colors = {
+      R: 0xB71234, // Right (Red)
+      L: 0xFF5800, // Left (Orange)
+      U: 0xFFFFFF, // Top (White)
+      D: 0xFFD500, // Bottom (Yellow)
+      F: 0x009E60, // Front (Green)
+      B: 0x0051BA, // Back (Blue)
+      I: 0x18181c  // Inner (Dark Gray)
+    };
+
+    function createCubie(x, y, z) {
+      const geom = new THREE.BoxGeometry(0.94, 0.94, 0.94);
+      const mats = [
+        new THREE.MeshLambertMaterial({ color: x === 1 ? colors.R : colors.I }),
+        new THREE.MeshLambertMaterial({ color: x === -1 ? colors.L : colors.I }),
+        new THREE.MeshLambertMaterial({ color: y === 1 ? colors.U : colors.I }),
+        new THREE.MeshLambertMaterial({ color: y === -1 ? colors.D : colors.I }),
+        new THREE.MeshLambertMaterial({ color: z === 1 ? colors.F : colors.I }),
+        new THREE.MeshLambertMaterial({ color: z === -1 ? colors.B : colors.I })
+      ];
+      const mesh = new THREE.Mesh(geom, mats);
+      mesh.position.set(x, y, z);
+      mesh.userData = { initPos: new THREE.Vector3(x, y, z) };
+      return mesh;
+    }
+
+    function initCube() {
+      while (cubeGroup.children.length > 0) {
+        cubeGroup.remove(cubeGroup.children[0]);
+      }
+      cubies.length = 0;
+      for (let x = -1; x <= 1; x++) {
+        for (let y = -1; y <= 1; y++) {
+          for (let z = -1; z <= 1; z++) {
+            const cubie = createCubie(x, y, z);
+            cubies.push(cubie);
+            cubeGroup.add(cubie);
+          }
+        }
+      }
+    }
+    initCube();
+
+    // --- Rotation Logic ---
+    let isAnimating = false;
+    const moveQueue = [];
+
+    // World-space reference directions for each button, as seen by the (fixed) viewer.
+    const worldFaceDirs = {
+      F: new THREE.Vector3(0, 0, 1),
+      B: new THREE.Vector3(0, 0, -1),
+      U: new THREE.Vector3(0, 1, 0),
+      D: new THREE.Vector3(0, -1, 0),
+      R: new THREE.Vector3(1, 0, 0),
+      L: new THREE.Vector3(-1, 0, 0)
+    };
+
+    const localAxisCandidates = [
+      { axis: 'x', sign: 1,  vec: new THREE.Vector3(1, 0, 0),  letter: 'R' },
+      { axis: 'x', sign: -1, vec: new THREE.Vector3(-1, 0, 0), letter: 'L' },
+      { axis: 'y', sign: 1,  vec: new THREE.Vector3(0, 1, 0),  letter: 'U' },
+      { axis: 'y', sign: -1, vec: new THREE.Vector3(0, -1, 0), letter: 'D' },
+      { axis: 'z', sign: 1,  vec: new THREE.Vector3(0, 0, 1),  letter: 'F' },
+      { axis: 'z', sign: -1, vec: new THREE.Vector3(0, 0, -1), letter: 'B' }
+    ];
+
+    // Given a world-space button letter (F, U, R...), figure out which
+    // physical layer of the cube (in its own local coordinate frame)
+    // currently occupies that position from the viewer's perspective, since
+    // the whole cube may have been freely rotated by dragging. `letter` on
+    // the returned candidate is that layer's ORIGINAL face identity, which
+    // is what its center sticker color still is, no matter how the cube has
+    // been spun around.
+    function resolveLocalAxis(worldLetter) {
+      const worldTarget = worldFaceDirs[worldLetter];
+      if (!worldTarget) return null;
+
+      const invQuat = cubeGroup.quaternion.clone().invert();
+      const localTarget = worldTarget.clone().applyQuaternion(invQuat);
+
+      let best = localAxisCandidates[0];
+      let bestDot = -Infinity;
+      for (const c of localAxisCandidates) {
+        const d = c.vec.dot(localTarget);
+        if (d > bestDot) {
+          bestDot = d;
+          best = c;
+        }
+      }
+      return best;
+    }
+
+    function resolveMove(move) {
+      const prime = move.endsWith("'");
+      const base = prime ? move.slice(0, -1) : move;
+
+      // H is the middle slice between L and R -- there's no local axis
+      // candidate for it (it isn't a face), so it borrows L's axis at
+      // layer 0, turning the same direction an L turn currently would.
+      if (base === 'H') {
+        const bestL = resolveLocalAxis('L');
+        if (!bestL) return null;
+        let dir = -Math.sign(bestL.sign);
+        if (prime) dir = -dir;
+        return { axis: bestL.axis, layers: [0], dir };
+      }
+
+      // RW / LW are "wide" turns: the outer layer and the middle slice
+      // move together as one, same direction as a plain R or L turn.
+      if (base === 'RW' || base === 'LW') {
+        const faceLetter = base === 'RW' ? 'R' : 'L';
+        const best = resolveLocalAxis(faceLetter);
+        if (!best) return null;
+        let dir = -Math.sign(best.sign);
+        if (prime) dir = -dir;
+        return { axis: best.axis, layers: [best.sign, 0], dir };
+      }
+
+      const best = resolveLocalAxis(base);
+      if (!best) return null;
+
+      const layer = best.sign;
+      let dir = -Math.sign(layer);
+      if (prime) dir = -dir;
+
+      return { axis: best.axis, layers: [layer], dir };
+    }
+
+    // Recolor every button to match what it will ACTUALLY turn right now.
+    // Button letters stay screen-relative (pressing "L" always turns
+    // whatever is currently on the left), but after dragging the cube
+    // around, the sticker facing left may no longer be orange -- so the
+    // color has to be looked up fresh from the cube's live orientation
+    // rather than hardcoded per letter.
+    function syncButtonColors() {
+      if (!colorSyncEnabled) {
+        // Fixed mode: every card shows its letter's notation color,
+        // regardless of how the cube has been dragged around.
+        buttonLayout.forEach((worldLetter, i) => {
+          const card = document.querySelector(`.face-card[data-slot="${i}"]`);
+          if (!card) return;
+          const meta = staticColorFor(worldLetter);
+          card.style.setProperty('--fc', meta.bg);
+          card.style.setProperty('--fc-text', meta.text);
+        });
+        hCard.style.setProperty('--fc-left', FACE_COLORS.L.bg);
+        hCard.style.setProperty('--fc-right', FACE_COLORS.R.bg);
+        return;
+      }
+
+      buttonLayout.forEach((worldLetter, i) => {
+        const card = document.querySelector(`.face-card[data-slot="${i}"]`);
+        if (!card) return;
+        // LW/RW have no face of their own -- they ride along with L/R's
+        // live color wherever they've been placed.
+        const faceLetter = worldLetter === 'LW' ? 'L' : worldLetter === 'RW' ? 'R' : worldLetter;
+        const best = resolveLocalAxis(faceLetter);
+        const meta = FACE_COLORS[best ? best.letter : faceLetter];
+        card.style.setProperty('--fc', meta.bg);
+        card.style.setProperty('--fc-text', meta.text);
+      });
+
+      // H stays fixed and always shows a live split of the current L/R colors.
+      const bestL = resolveLocalAxis('L');
+      const bestR = resolveLocalAxis('R');
+      const leftMeta = FACE_COLORS[bestL ? bestL.letter : 'L'];
+      const rightMeta = FACE_COLORS[bestR ? bestR.letter : 'R'];
+      hCard.style.setProperty('--fc-left', leftMeta.bg);
+      hCard.style.setProperty('--fc-right', rightMeta.bg);
+    }
+
+    function makeTurn(move, instant = false) {
+      if (gameState === 'scrambled') {
+        startTimer();
+      }
+      if (isAnimating && !instant) {
+        moveQueue.push(move);
+        return;
+      }
+      executeTurn(move, instant);
+    }
+
+    function executeTurn(move, instant) {
+      const cfg = resolveMove(move);
+      if (!cfg) return;
+
+      const layerCubies = cubies.filter(c => {
+        const p = c.position;
+        return cfg.layers.some((L) => Math.abs(p[cfg.axis] - L) < 0.2);
+      });
+
+      const pivot = new THREE.Object3D();
+      cubeGroup.add(pivot);
+
+      layerCubies.forEach(c => pivot.attach(c));
+
+      const targetAngle = (Math.PI / 2) * cfg.dir;
+
+      if (instant) {
+        pivot.rotation[cfg.axis] = targetAngle;
+        pivot.updateMatrixWorld(true);
+        layerCubies.forEach(c => {
+          cubeGroup.attach(c);
+          snapCubie(c);
+        });
+        cubeGroup.remove(pivot);
+        if (moveQueue.length > 0) {
+          executeTurn(moveQueue.shift(), true);
+        }
+      } else {
+        isAnimating = true;
+        const duration = 150;
+        const startTime = performance.now();
+
+        function animateTurn(now) {
+          const elapsed = now - startTime;
+          const progress = Math.min(elapsed / duration, 1);
+          const ease = 1 - Math.pow(1 - progress, 3);
+
+          pivot.rotation[cfg.axis] = targetAngle * ease;
+
+          if (progress < 1) {
+            requestAnimationFrame(animateTurn);
+          } else {
+            pivot.rotation[cfg.axis] = targetAngle;
+            pivot.updateMatrixWorld(true);
+            layerCubies.forEach(c => {
+              cubeGroup.attach(c);
+              snapCubie(c);
+            });
+            cubeGroup.remove(pivot);
+            isAnimating = false;
+
+            if (gameState === 'solving') {
+              checkSolved();
+            }
+
+            if (moveQueue.length > 0) {
+              executeTurn(moveQueue.shift(), false);
+            }
+          }
+        }
+        requestAnimationFrame(animateTurn);
+      }
+    }
+
+    function snapCubie(c) {
+      c.position.x = Math.round(c.position.x);
+      c.position.y = Math.round(c.position.y);
+      c.position.z = Math.round(c.position.z);
+
+      c.rotation.x = Math.round(c.rotation.x / (Math.PI / 2)) * (Math.PI / 2);
+      c.rotation.y = Math.round(c.rotation.y / (Math.PI / 2)) * (Math.PI / 2);
+      c.rotation.z = Math.round(c.rotation.z / (Math.PI / 2)) * (Math.PI / 2);
+      c.updateMatrix();
+    }
+
+    // --- Game Logic & Timer ---
+    let gameState = 'idle';
+    let timerInterval = null;
+    let startTime = 0;
+
+    const timerEl = document.getElementById('timer');
+    const bestEl = document.getElementById('best-time');
+    const msgEl = document.getElementById('msg');
+    const fireworksContainer = document.getElementById('fireworks-container');
+    const recordsBtn = document.getElementById('records-btn');
+    const recordsOverlay = document.getElementById('records-overlay');
+    const recordsBestEl = document.getElementById('records-best');
+    const recordsListEl = document.getElementById('records-list');
+    const recordsClearBtn = document.getElementById('records-clear');
+    const recordsCloseBtn = document.getElementById('records-close');
+
+    function formatTime(ms) {
+      const totalSec = Math.floor(ms / 1000);
+      const min = String(Math.floor(totalSec / 60)).padStart(2, '0');
+      const sec = String(totalSec % 60).padStart(2, '0');
+      const cs = String(Math.floor((ms % 1000) / 10)).padStart(2, '0');
+      return `${min}:${sec}.${cs}`;
+    }
+
+    function startTimer() {
+      gameState = 'solving';
+      startTime = Date.now();
+      clearInterval(timerInterval);
+      timerInterval = setInterval(() => {
+        const elapsed = Date.now() - startTime;
+        timerEl.textContent = formatTime(elapsed);
+      }, 20);
+    }
+
+    function stopTimer() {
+      clearInterval(timerInterval);
+      const finalMs = Date.now() - startTime;
+      timerEl.textContent = formatTime(finalMs);
+
+      const isNewBest = records.length === 0 || finalMs < records[0].ms;
+      addRecord(finalMs);
+      return isNewBest;
+    }
+
+    function resetTimer() {
+      clearInterval(timerInterval);
+      timerEl.textContent = '00:00.00';
+    }
+
+    // --- Personal records (persisted) ---
+    // Kept sorted fastest-first, capped at 50 entries. Stored via
+    // localStorage so records survive once this page is hosted and added to
+    // the iOS Home Screen as its own app (localStorage is tied to the page's
+    // URL, so it needs a real hosted origin -- see the setup notes for this
+    // file). Note: localStorage is blocked inside Claude.ai's own in-chat
+    // artifact preview, so records won't persist there; this is a deliberate
+    // trade-off for standalone/Home-Screen use.
+    const RECORDS_KEY = 'rubiks-cube-records';
+    let records = [];
+
+    function loadRecords() {
+      try {
+        const raw = localStorage.getItem(RECORDS_KEY);
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          if (Array.isArray(parsed.times)) records = parsed.times;
+        }
+      } catch (err) {
+        // No saved records yet, or storage unavailable (private browsing,
+        // Claude's artifact preview, etc.) -- start empty.
+        records = [];
+      }
+      refreshBestDisplay();
+    }
+
+    function saveRecords() {
+      try {
+        localStorage.setItem(RECORDS_KEY, JSON.stringify({ times: records }));
+      } catch (err) {
+        // Storage unavailable -- the record still counts for this session,
+        // it just won't carry over to the next visit.
+      }
+    }
+
+    function refreshBestDisplay() {
+      bestEl.textContent = records.length ? `BEST: ${formatTime(records[0].ms)}` : 'BEST: --:--.--';
+    }
+
+    function addRecord(ms) {
+      records.push({ ms, at: new Date().toISOString() });
+      records.sort((a, b) => a.ms - b.ms);
+      if (records.length > 50) records.length = 50;
+      refreshBestDisplay();
+      saveRecords();
+    }
+
+    function renderRecordsList() {
+      recordsBestEl.textContent = records.length ? `BEST: ${formatTime(records[0].ms)}` : 'BEST: --:--.--';
+      recordsListEl.innerHTML = '';
+      if (!records.length) {
+        recordsListEl.innerHTML = '<div class="records-empty">まだ記録がありません。シャッフルして揃えてみましょう。</div>';
+        return;
+      }
+      records.forEach((r, i) => {
+        const row = document.createElement('div');
+        row.className = 'record-row' + (i === 0 ? ' rank-1' : '');
+        const d = new Date(r.at);
+        const dateLabel = isNaN(d) ? '' :
+          `${d.getMonth() + 1}/${d.getDate()} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+        row.innerHTML =
+          `<span class="record-rank">${i + 1}</span>` +
+          `<span class="record-time">${formatTime(r.ms)}</span>` +
+          `<span class="record-date">${dateLabel}</span>`;
+        recordsListEl.appendChild(row);
+      });
+    }
+
+    recordsBtn.addEventListener('click', () => {
+      renderRecordsList();
+      recordsOverlay.classList.add('show');
+    });
+    recordsCloseBtn.addEventListener('click', () => {
+      recordsOverlay.classList.remove('show');
+    });
+
+    // Two-tap confirm (tap once to arm, tap again within 3s to actually
+    // clear) instead of a native confirm() dialog, consistent with how the
+    // rest of this app avoids browser chrome.
+    let clearArmed = false;
+    let clearArmedTimer = null;
+    recordsClearBtn.addEventListener('click', () => {
+      if (!clearArmed) {
+        clearArmed = true;
+        recordsClearBtn.textContent = 'もう一度タップで消去';
+        clearArmedTimer = setTimeout(() => {
+          clearArmed = false;
+          recordsClearBtn.textContent = '記録を消去';
+        }, 3000);
+        return;
+      }
+      clearTimeout(clearArmedTimer);
+      clearArmed = false;
+      recordsClearBtn.textContent = '記録を消去';
+      records = [];
+      refreshBestDisplay();
+      renderRecordsList();
+      saveRecords();
+    });
+
+    loadRecords();
+
+    function scrambleCube() {
+      // Neutralize gameState before scrambling: makeTurn() starts the timer
+      // whenever gameState is 'scrambled', and it would still be 'scrambled'
+      // here if Scramble is pressed twice in a row (or after any earlier
+      // scramble) without an intervening solve. Without this, the scramble's
+      // own internal moves -- not the player's first real move -- would
+      // trigger the timer.
+      gameState = 'idle';
+      resetTimer();
+      initCube();
+      msgEl.style.opacity = '0';
+      const moves = ['U', "U'", 'D', "D'", 'L', "L'", 'R', "R'", 'F', "F'", 'B', "B'"];
+      for (let i = 0; i < 22; i++) {
+        const randMove = moves[Math.floor(Math.random() * moves.length)];
+        makeTurn(randMove, true);
+      }
+      gameState = 'scrambled';
+    }
+
+    function checkSolved() {
+      for (let c of cubies) {
+        if (Math.abs(c.position.x - c.userData.initPos.x) > 0.1 ||
+            Math.abs(c.position.y - c.userData.initPos.y) > 0.1 ||
+            Math.abs(c.position.z - c.userData.initPos.z) > 0.1) {
+          return false;
+        }
+        const q = c.quaternion;
+        const angle = 2 * Math.acos(Math.min(Math.max(Math.abs(q.w), 0), 1));
+        if (angle > 0.1) return false;
+      }
+
+      gameState = 'solved';
+      const isNewBest = stopTimer();
+      msgEl.textContent = isNewBest ? '🏆 自己ベスト更新！' : 'SOLVED! 🎉';
+      msgEl.style.opacity = '1';
+      msgEl.classList.remove('pop');
+      void msgEl.offsetWidth;
+      msgEl.classList.add('pop');
+      triggerHaptics(isNewBest ? [50, 40, 50, 40, 50, 40, 160] : [40, 40, 40, 40, 120]);
+      launchFireworks(isNewBest);
+      setTimeout(() => {
+        msgEl.style.opacity = '0';
+        msgEl.classList.remove('pop');
+      }, 3000);
+      return true;
+    }
+
+    // Small colored sparks burst outward from a few points and fade, reusing
+    // the cube's own sticker colors so the celebration ties back to the
+    // thing you just solved. A new personal best gets extra bursts.
+    function spawnFireworkBurst(cx, cy, count, colors) {
+      for (let i = 0; i < count; i++) {
+        const p = document.createElement('div');
+        p.className = 'fw-particle';
+        const angle = Math.random() * Math.PI * 2;
+        const dist = 55 + Math.random() * 85;
+        const dx = Math.cos(angle) * dist;
+        const dy = Math.sin(angle) * dist + 30; // slight downward drift, like gravity
+        p.style.setProperty('--dx', dx.toFixed(1) + 'px');
+        p.style.setProperty('--dy', dy.toFixed(1) + 'px');
+        p.style.left = cx + 'px';
+        p.style.top = cy + 'px';
+        const color = colors[Math.floor(Math.random() * colors.length)];
+        p.style.background = color;
+        p.style.color = color; // currentColor, used by the glow box-shadow
+        p.style.animationDuration = (750 + Math.random() * 400) + 'ms';
+        fireworksContainer.appendChild(p);
+        p.addEventListener('animationend', () => p.remove());
+      }
+    }
+
+    function launchFireworks(big) {
+      const rect = fireworksContainer.getBoundingClientRect();
+      const colors = Object.values(FACE_COLORS).map((m) => m.bg);
+      const bursts = [
+        { x: rect.width * 0.28, y: rect.height * 0.4, delay: 0 },
+        { x: rect.width * 0.72, y: rect.height * 0.3, delay: 180 },
+        { x: rect.width * 0.5, y: rect.height * 0.55, delay: 360 },
+        { x: rect.width * 0.5, y: rect.height * 0.22, delay: 540 }
+      ];
+      if (big) {
+        bursts.push({ x: rect.width * 0.2, y: rect.height * 0.2, delay: 720 });
+        bursts.push({ x: rect.width * 0.8, y: rect.height * 0.6, delay: 860 });
+      }
+      bursts.forEach((b) => {
+        setTimeout(() => spawnFireworkBurst(b.x, b.y, big ? 26 : 20, colors), b.delay);
+      });
+    }
+
+    function resetCube() {
+      resetTimer();
+      initCube();
+      gameState = 'idle';
+      msgEl.style.opacity = '0';
+    }
+
+    // --- Listeners ---
+    document.getElementById('scramble-btn').addEventListener('click', scrambleCube);
+    document.getElementById('reset-btn').addEventListener('click', resetCube);
+
+    window.addEventListener('resize', () => {
+      camera.aspect = container.clientWidth / container.clientHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(container.clientWidth, container.clientHeight);
+    });
+
+    // --- Render Loop ---
+    function animate() {
+      requestAnimationFrame(animate);
+      renderer.render(scene, camera);
+    }
+    syncButtonColors();
+    animate();
+    } catch (err) {
+      console.error('3D initialization failed:', err);
+      const container = document.getElementById('canvas-container');
+      container.innerHTML = '<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;padding:24px;text-align:center;color:#ff7788;font-size:14px;">3Dキューブの読み込みに失敗しました。<br>ページを再読み込みしてください。</div>';
+    }
+  </script>
+</body>
+</html>
