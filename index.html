@@ -1,0 +1,2346 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>3D Rubik's Cube</title>
+  <!-- Home Screen / standalone web-app support (iOS "Add to Home Screen") -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="ルービックキューブ">
+  <meta name="theme-color" content="#121214">
+  <link rel="apple-touch-icon" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAALQAAAC0CAIAAACyr5FlAAAEEUlEQVR4nO3dsW0cRxTH4aPhCkgrdyOGMkeuwG5DZagNqQJHzgw14twma3BARgf9FzO3b95yye/L795B/OEdlhBn7u7vf7rA9/xw9Afg9RIHkTiIxEEkDiJxEImDSBxE4iASB5E4iMRBJA4icRCJg0gcROIgEgeROIjEQSQOoh9XvOnjr/+Vv+fDX7f/L/mnz78VfpJn95/+vPm1j98W/Pv8Uv9XBHe1f5qwIosrU5WsyOLKVCUrsrhSWEnl10pDGVNTGsqYmtJQRu2Usjh6yhif1VPG+KyeMmpn1cTRWcbIxM4yRiZ2llE40dMKUUEc/Wtje27/2tie2782qubaHETiIBIHkTiIxEEkDiJxEImDSBxE4iASB5E4iMRBJA4icRCJg0gcROIgEgeROIjEQSQOInEQiYNIHETiIBIHUUEce87cWTF3z5k7e6S5K87cGbF/rs1BdNY4jlpXyVHrKilZVzVx+FFtO+qbZaeyzdHZx8iszj5GZnX2UTXrZKcJzia4+iCX2QRXH+RSm2BxHM+cQ7rtnZ5Dylty1qcVGoiDSBxE4iASB5E4iNbct/L4b/l7Pjx8uPm1Xy4/132QF39c/rn5tU8fv9Z9kBf3f/9e/p7VvyFdkMWVqUpWZHFlqpIVWVwprKT0vpX1ZUxNaShjakpDGbVT6u5baSljfFZPGeOzesqonVV030pjGSMTO8sYmdhZRuFETytEFfettK+N7bn9a2N7bv/aqJprcxCJg0gcROIgEgeROIjEQSQOInEQiYNIHETiIBIHkTiIxEEkDiJxEImDSBxE4iASB5E4iMRBJA4icRCJg0gcRBX3rew4c2fF3D1n7uyR5q44c2fE/rk2B9FZ4zhqXSVHraukZF0V3bfiR7XpqG+WneruW2nsY2RWZx8jszr7qJp1stMEZxNcfZDLbIKrD3KpTXDNfSvOId30Ts8h5S0569MKDcRBJA4icRCJg0gcREvuW3GP67bXdu9uUvx7jtU3QF8mK1l9A/RlspLVN3ZfSiup/FppKGNqSkMZU1MayqidUhZHTxnjs3rKGJ/VU0btrJo4OssYmdhZxsjEzjIKJ3paISqIo39tbM/tXxvbc/vXRtVcm4NIHETiIBIHkTiIxEEkDiJxEImDSBxE4iASB5E4iMRBJA4icRCJg0gcROIgEgeROIjEQSQOInEQiYNIHETiICqIY8+ZOyvm7jlzZ480d8WZOyP2z7U5iM4ax1HrKjlqXSUl66omDj+qbUd9s+xUtjk6+xiZ1dnHyKzOPqpmnew0wdkEVx/kMpvg6oNcahNccqWGc0i3vdNzSHlLzvq0QgNxEImDSBxE4iASB5E4iMRBJA4icRCJg0gcROIgEgeROIjEQSQOInEQiYNIHET/A2ThLQeMzAUsAAAAAElFTkSuQmCC">
+  <link rel="icon" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAALQAAAC0CAIAAACyr5FlAAAEEUlEQVR4nO3dsW0cRxTH4aPhCkgrdyOGMkeuwG5DZagNqQJHzgw14twma3BARgf9FzO3b95yye/L795B/OEdlhBn7u7vf7rA9/xw9Afg9RIHkTiIxEEkDiJxEImDSBxE4iASB5E4iMRBJA4icRCJg0gcROIgEgeROIjEQSQOoh9XvOnjr/+Vv+fDX7f/L/mnz78VfpJn95/+vPm1j98W/Pv8Uv9XBHe1f5qwIosrU5WsyOLKVCUrsrhSWEnl10pDGVNTGsqYmtJQRu2Usjh6yhif1VPG+KyeMmpn1cTRWcbIxM4yRiZ2llE40dMKUUEc/Wtje27/2tie2782qubaHETiIBIHkTiIxEEkDiJxEImDSBxE4iASB5E4iMRBJA4icRCJg0gcROIgEgeROIjEQSQOInEQiYNIHETiIBIHUUEce87cWTF3z5k7e6S5K87cGbF/rs1BdNY4jlpXyVHrKilZVzVx+FFtO+qbZaeyzdHZx8iszj5GZnX2UTXrZKcJzia4+iCX2QRXH+RSm2BxHM+cQ7rtnZ5Dylty1qcVGoiDSBxE4iASB5E4iNbct/L4b/l7Pjx8uPm1Xy4/132QF39c/rn5tU8fv9Z9kBf3f/9e/p7VvyFdkMWVqUpWZHFlqpIVWVwprKT0vpX1ZUxNaShjakpDGbVT6u5baSljfFZPGeOzesqonVV030pjGSMTO8sYmdhZRuFETytEFfettK+N7bn9a2N7bv/aqJprcxCJg0gcROIgEgeROIjEQSQOInEQiYNIHETiIBIHkTiIxEEkDiJxEImDSBxE4iASB5E4iMRBJA4icRCJg0gcRBX3rew4c2fF3D1n7uyR5q44c2fE/rk2B9FZ4zhqXSVHraukZF0V3bfiR7XpqG+WneruW2nsY2RWZx8jszr7qJp1stMEZxNcfZDLbIKrD3KpTXDNfSvOId30Ts8h5S0569MKDcRBJA4icRCJg0gcREvuW3GP67bXdu9uUvx7jtU3QF8mK1l9A/RlspLVN3ZfSiup/FppKGNqSkMZU1MayqidUhZHTxnjs3rKGJ/VU0btrJo4OssYmdhZxsjEzjIKJ3paISqIo39tbM/tXxvbc/vXRtVcm4NIHETiIBIHkTiIxEEkDiJxEImDSBxE4iASB5E4iMRBJA4icRCJg0gcROIgEgeROIjEQSQOInEQiYNIHETiICqIY8+ZOyvm7jlzZ480d8WZOyP2z7U5iM4ax1HrKjlqXSUl66omDj+qbUd9s+xUtjk6+xiZ1dnHyKzOPqpmnew0wdkEVx/kMpvg6oNcahNccqWGc0i3vdNzSHlLzvq0QgNxEImDSBxE4iASB5E4iMRBJA4icRCJg0gcROIgEgeROIjEQSQOInEQiYNIHET/A2ThLQeMzAUsAAAAAElFTkSuQmCC">
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+    body {
+      background-color: #121214;
+      color: #ffffff;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+    }
+    #header {
+      padding: 10px 12px 10px;
+      padding-top: calc(10px + env(safe-area-inset-top));
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 8px;
+      background: rgba(255, 255, 255, 0.05);
+      backdrop-filter: blur(10px);
+      z-index: 10;
+      flex-shrink: 0;
+    }
+    .timer-box {
+      display: flex;
+      flex-direction: column;
+    }
+    .timer-label {
+      font-size: 10px;
+      color: #aaa;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+    #timer {
+      font-size: 24px;
+      font-weight: 700;
+      font-family: monospace;
+      color: #00ffcc;
+    }
+    #best-time {
+      font-size: 12px;
+      color: #ffd700;
+      margin-top: 2px;
+    }
+    /* The four actions stay tucked away behind a small toggle. Scramble and
+       reset are destructive mid-solve, so nothing here is reachable by a
+       stray touch -- you have to open the menu first, and it closes itself
+       again as soon as you act, start solving, or leave it alone. */
+    .top-btns {
+      display: flex;
+      align-items: flex-start;
+      justify-content: flex-end;
+      gap: 6px;
+    }
+    .menu-toggle {
+      flex: 0 0 auto;
+      width: 34px;
+      height: 34px;
+      border-radius: 10px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid #3f3f4e;
+      color: #9a9aad;
+      font-size: 17px;
+      font-weight: 800;
+      line-height: 1;
+      cursor: pointer;
+      touch-action: manipulation;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: color 0.15s, border-color 0.15s, background 0.15s;
+    }
+    .menu-toggle.open {
+      color: #00ffcc;
+      border-color: #00ffcc;
+      background: rgba(0, 255, 204, 0.12);
+    }
+    .menu-actions {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+      gap: 6px;
+      max-width: 0;
+      opacity: 0;
+      pointer-events: none;
+      overflow: hidden;
+      transition: max-width 0.22s ease, opacity 0.18s ease;
+    }
+    .menu-actions.open {
+      max-width: 100vw;
+      opacity: 1;
+      pointer-events: auto;
+    }
+    .action-btn {
+      background: #2a2a32;
+      color: #fff;
+      border: 1px solid #444;
+      padding: 7px 10px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+    .action-btn:active {
+      background: #00ffcc;
+      color: #000;
+    }
+    .action-btn.active {
+      background: #00ffcc;
+      color: #000;
+      border-color: #00ffcc;
+    }
+    #canvas-container {
+      flex: 1;
+      min-height: 0;
+      width: 100%;
+      position: relative;
+      touch-action: none;
+    }
+    #controls {
+      padding: 8px 12px 12px;
+      padding-bottom: calc(12px + env(safe-area-inset-bottom));
+      background: rgba(0, 0, 0, 0.4);
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      z-index: 10;
+      flex-shrink: 0;
+    }
+    .controls-label {
+      font-size: 11px;
+      color: #999;
+      text-align: center;
+      margin-bottom: 2px;
+      letter-spacing: 0.5px;
+    }
+    .mode-indicator {
+      display: none;
+      font-size: 11px;
+      font-weight: 700;
+      color: #ffd700;
+      text-align: center;
+      margin-bottom: 4px;
+      letter-spacing: 0.3px;
+    }
+    .mode-indicator.show {
+      display: block;
+    }
+    .wide-grid {
+      margin-bottom: 2px;
+    }
+    .wide-spacer {
+      pointer-events: none;
+    }
+    /* Same face, same color as the single-layer button below it -- Lw/Rw
+       are still fundamentally "L" and "R", just grabbing the middle layer
+       along with them -- so the badge is the only thing distinguishing it
+       from its single-layer counterpart. */
+    .wide-card::before {
+      content: '2層';
+      position: absolute;
+      top: 5px;
+      right: 8px;
+      font-size: 8px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      color: var(--fc-text);
+      opacity: 0.6;
+      pointer-events: none;
+    }
+    /* The middle slice has no sticker of its own -- it's the column between
+       L and R -- so its card is split into both of those faces' current
+       colors instead of one solid fill, making the "it's the layer between
+       these two" relationship visible rather than stated. */
+    .slice-card {
+      --fc-left: #FF5800;
+      --fc-right: #B71234;
+      width: 100%;
+      background: linear-gradient(90deg, var(--fc-left) 0 50%, var(--fc-right) 50% 100%);
+    }
+    /* The arrows sit on a gradient, not a single flat color, so a
+       per-side text color can end up low-contrast against whatever
+       happens to be behind it at a given cube orientation. A fixed dark
+       badge (matching the H letter's own badge) keeps them reliably
+       visible no matter what colors --fc-left/--fc-right currently are. */
+    .slice-card .edge-hint {
+      min-width: 24px;
+      height: 24px;
+      padding: 0 3px;
+      border-radius: 999px;
+      background: rgba(0, 0, 0, 0.5);
+      color: #ffffff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .slice-card .face-letter {
+      padding: 3px 12px;
+      border-radius: 8px;
+      background: rgba(0, 0, 0, 0.55);
+      color: #fff;
+      font-size: 16px;
+    }
+
+    /* One card per cube face: a solid block of the face's real sticker
+       color. Slide it -- right to turn normally, left to reverse -- rather
+       than tapping a zone, so the direction you push is the direction it
+       spins. Color is the primary cue ("slide the orange one"), the edge
+       arrows light up as you drag past the commit point, and the letter is
+       there for anyone who already knows cube notation. */
+    .face-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+    }
+    .face-card {
+      --fc: #23232c;
+      --fc-text: #ffffff;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 62px;
+      padding: 0 12px;
+      border-radius: 14px;
+      overflow: hidden;
+      background: var(--fc);
+      box-shadow: 0 3px 0 rgba(0, 0, 0, 0.35), inset 0 0 0 1px rgba(255, 255, 255, 0.15);
+      touch-action: pan-y;
+      cursor: grab;
+      user-select: none;
+      position: relative;
+    }
+    .face-card::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(circle at var(--ripple-origin, 50%) 50%, rgba(255, 255, 255, 0.55) 0%, rgba(255, 255, 255, 0) 70%);
+      opacity: 0;
+      pointer-events: none;
+    }
+    .face-letter {
+      font-size: 19px;
+      font-weight: 800;
+      color: var(--fc-text);
+      pointer-events: none;
+      transition: transform 0.18s cubic-bezier(.34, 1.56, .64, 1);
+    }
+    .edge-hint {
+      font-size: 20px;
+      font-weight: 900;
+      color: var(--fc-text);
+      opacity: 0.35;
+      pointer-events: none;
+      transition: opacity 0.12s, transform 0.12s;
+    }
+    /* Slide "juice": the letter eases back to center, the winning edge
+       arrow briefly pops, and a bright ripple flashes from whichever side
+       was pushed -- so the card visibly snaps back like the physical
+       cube's click. Re-triggered from JS on every committed slide. */
+    .face-card.zap {
+      animation: zapScale 0.32s cubic-bezier(.34, 1.56, .64, 1);
+    }
+    .face-card.zap::after {
+      animation: zapRipple 0.42s ease-out;
+    }
+    .face-card.zap.dir-right .edge-hint.right,
+    .face-card.zap.dir-left .edge-hint.left {
+      animation: zapArrow 0.32s ease-out;
+    }
+    .face-card.dragging {
+      cursor: grabbing;
+      filter: brightness(1.08);
+    }
+    @keyframes zapScale {
+      0% { filter: brightness(1); }
+      35% { filter: brightness(1.5); }
+      100% { filter: brightness(1); }
+    }
+    @keyframes zapRipple {
+      0% { opacity: 0.9; }
+      100% { opacity: 0; }
+    }
+    @keyframes zapArrow {
+      0% { opacity: 1; transform: scale(1.5); }
+      100% { opacity: 0.35; transform: scale(1); }
+    }
+    #msg {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%) scale(0.7);
+      background: rgba(0, 0, 0, 0.85);
+      border: 2px solid #00ffcc;
+      color: #00ffcc;
+      padding: 16px 24px;
+      border-radius: 12px;
+      font-size: 20px;
+      font-weight: bold;
+      text-align: center;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.3s;
+      z-index: 20;
+    }
+    .msg-sub {
+      display: block;
+      margin-top: 6px;
+      font-size: 11px;
+      font-weight: 600;
+      color: #aaa;
+      letter-spacing: 0.3px;
+    }
+    #msg.pop {
+      animation: msgPop 0.55s cubic-bezier(.34, 1.56, .64, 1);
+      animation-fill-mode: forwards;
+    }
+    @keyframes msgPop {
+      0% { transform: translate(-50%, -50%) scale(0.6); box-shadow: 0 0 0 rgba(0, 255, 204, 0); }
+      55% { transform: translate(-50%, -50%) scale(1.08); box-shadow: 0 0 40px rgba(0, 255, 204, 0.55); }
+      100% { transform: translate(-50%, -50%) scale(1); box-shadow: 0 0 20px rgba(0, 255, 204, 0.25); }
+    }
+    #settings-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.75);
+      z-index: 30;
+      align-items: center;
+      justify-content: center;
+    }
+    #settings-panel {
+      background: #1c1c22;
+      border: 1px solid #3a3a48;
+      border-radius: 14px;
+      padding: 20px;
+      width: min(90vw, 360px);
+      text-align: center;
+    }
+    #settings-panel h2 {
+      font-size: 16px;
+      margin-bottom: 6px;
+    }
+    .settings-hint {
+      font-size: 12px;
+      color: #aaa;
+      margin-bottom: 14px;
+    }
+    .settings-toggle-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 6px;
+    }
+    .settings-toggle-label {
+      font-size: 13px;
+      font-weight: 600;
+      color: #fff;
+      text-align: left;
+    }
+    .toggle-switch {
+      flex: 0 0 auto;
+      width: 46px;
+      height: 26px;
+      border-radius: 13px;
+      border: 1px solid #3a3a48;
+      background: #23232c;
+      position: relative;
+      cursor: pointer;
+      padding: 0;
+      transition: background 0.15s, border-color 0.15s;
+    }
+    .toggle-switch .toggle-knob {
+      position: absolute;
+      top: 2px;
+      left: 2px;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: #888;
+      transition: transform 0.18s cubic-bezier(.34, 1.56, .64, 1), background 0.15s;
+    }
+    .toggle-switch.on {
+      background: rgba(0, 255, 204, 0.18);
+      border-color: #00ffcc;
+    }
+    .toggle-switch.on .toggle-knob {
+      transform: translateX(20px);
+      background: #00ffcc;
+    }
+    .toggle-hint {
+      margin-top: -2px;
+    }
+    #settings-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+    .slot-btn {
+      --fc: #23232c;
+      --fc-text: #fff;
+      background: var(--fc);
+      color: var(--fc-text);
+      border: 1px solid #3a3a48;
+      border-radius: 8px;
+      padding: 14px 0 10px;
+      font-size: 18px;
+      font-weight: bold;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+    }
+    .slot-btn.selected {
+      box-shadow: 0 0 0 3px #00ffcc;
+      border-color: #00ffcc;
+    }
+    .settings-actions {
+      display: flex;
+      gap: 8px;
+      justify-content: center;
+    }
+
+    #records-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.75);
+      z-index: 30;
+      align-items: center;
+      justify-content: center;
+    }
+    #records-overlay.show {
+      display: flex;
+    }
+    #records-panel {
+      background: #1c1c22;
+      border: 1px solid #3a3a48;
+      border-radius: 14px;
+      padding: 20px;
+      width: min(90vw, 360px);
+      max-height: 80vh;
+      display: flex;
+      flex-direction: column;
+      text-align: center;
+    }
+    #records-panel h2 {
+      font-size: 16px;
+      margin-bottom: 6px;
+    }
+    #records-best {
+      font-size: 22px;
+      font-weight: 700;
+      font-family: monospace;
+      color: #ffd700;
+      margin-bottom: 10px;
+    }
+    #records-list {
+      overflow-y: auto;
+      margin-bottom: 16px;
+      border-radius: 10px;
+      background: rgba(255, 255, 255, 0.03);
+    }
+    .record-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 12px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+      font-size: 13px;
+    }
+    .record-row:last-child {
+      border-bottom: none;
+    }
+    .record-rank {
+      flex: 0 0 auto;
+      width: 22px;
+      color: #999;
+      font-weight: 700;
+      text-align: right;
+    }
+    .record-row.rank-1 .record-rank { color: #ffd700; }
+    .record-time {
+      flex: 1;
+      text-align: left;
+      font-family: monospace;
+      font-weight: 700;
+      color: #00ffcc;
+    }
+    .record-badges {
+      flex: 0 0 auto;
+      display: flex;
+      gap: 3px;
+    }
+    .record-badge {
+      font-size: 9px;
+      font-weight: 800;
+      letter-spacing: 0.3px;
+      padding: 2px 5px;
+      border-radius: 4px;
+      line-height: 1;
+    }
+    .record-badge.oll {
+      background: rgba(0, 255, 204, 0.15);
+      color: #00ffcc;
+      border: 1px solid rgba(0, 255, 204, 0.45);
+    }
+    .record-badge.pll {
+      background: rgba(255, 140, 90, 0.15);
+      color: #ff9d6b;
+      border: 1px solid rgba(255, 140, 90, 0.45);
+    }
+    .record-date {
+      flex: 0 0 auto;
+      color: #888;
+      font-size: 11px;
+    }
+    .records-empty {
+      padding: 24px 12px;
+      color: #888;
+      font-size: 13px;
+    }
+
+    /* Fireworks: small colored sparks burst outward from a few points and
+       fade out, reusing the cube's own sticker colors so the celebration
+       ties back to the thing you just solved. */
+    #fireworks-container {
+      position: absolute;
+      inset: 0;
+      overflow: hidden;
+      pointer-events: none;
+      z-index: 18;
+    }
+    .fw-particle {
+      position: absolute;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      margin: -4px 0 0 -4px;
+      animation-name: fw-burst;
+      animation-timing-function: cubic-bezier(.12, .7, .3, 1);
+      animation-fill-mode: forwards;
+      box-shadow: 0 0 10px currentColor, 0 0 20px currentColor;
+    }
+    @keyframes fw-burst {
+      0% { transform: translate(0, 0) scale(1.3); opacity: 1; }
+      75% { opacity: 1; }
+      100% { transform: translate(var(--dx), var(--dy)) scale(0.2); opacity: 0; }
+    }
+    /* A brief full-screen wash of light at the moment of the solve, gold and
+       longer for a new personal best. */
+    #fireworks-container.flash::before,
+    #fireworks-container.flash-best::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+    }
+    #fireworks-container.flash::before {
+      background: radial-gradient(circle at 50% 45%, rgba(0, 255, 204, 0.45), rgba(0, 255, 204, 0) 70%);
+      animation: fw-flash 0.7s ease-out forwards;
+    }
+    #fireworks-container.flash-best::before {
+      background: radial-gradient(circle at 50% 45%, rgba(255, 215, 0, 0.55), rgba(255, 215, 0, 0) 72%);
+      animation: fw-flash 1.1s ease-out forwards;
+    }
+    @keyframes fw-flash {
+      0% { opacity: 0; transform: scale(0.7); }
+      18% { opacity: 1; transform: scale(1); }
+      100% { opacity: 0; transform: scale(1.25); }
+    }
+    /* OLL / PLL sit as small circles directly above the Lw and Rw cards.
+       They are deliberately understated and inset from the slide area: the
+       face cards are dragged, these are tapped, so keeping them small,
+       spaced apart and visually quiet avoids catching a stray finger. */
+    .alg-row {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      justify-items: center;
+      margin-bottom: 2px;
+    }
+    .alg-btn {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid #3f3f4e;
+      color: #9a9aad;
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 0.5px;
+      cursor: pointer;
+      touch-action: manipulation;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: color 0.15s, border-color 0.15s, background 0.15s;
+    }
+    .alg-btn:active {
+      color: #00ffcc;
+      border-color: #00ffcc;
+      background: rgba(0, 255, 204, 0.12);
+      transform: scale(0.94);
+    }
+    .alg-spacer {
+      pointer-events: none;
+    }
+
+    #oll-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.8);
+      z-index: 30;
+      align-items: center;
+      justify-content: center;
+    }
+    #oll-overlay.show {
+      display: flex;
+    }
+    .alg-panel {
+      background: #1c1c22;
+      border: 1px solid #3a3a48;
+      border-radius: 14px;
+      padding: 18px;
+      width: min(94vw, 460px);
+      max-height: 86vh;
+      display: flex;
+      flex-direction: column;
+      text-align: center;
+    }
+    .alg-panel h2 {
+      font-size: 16px;
+      margin-bottom: 10px;
+    }
+    .oll-count {
+      font-size: 11px;
+      color: #00ffcc;
+      font-weight: 600;
+    }
+    .oll-mode-row {
+      margin-bottom: 4px;
+    }
+    .oll-mode-hint {
+      margin-bottom: 12px;
+      text-align: left;
+    }
+    #oll-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(60px, 1fr));
+      gap: 8px;
+      overflow-y: auto;
+      padding: 4px 2px 12px;
+      margin-bottom: 12px;
+    }
+    .oll-case {
+      background: #23232c;
+      border: 1px solid #3a3a48;
+      border-radius: 8px;
+      padding: 5px 3px 3px;
+      cursor: pointer;
+      touch-action: manipulation;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 3px;
+    }
+    .oll-case:active {
+      border-color: #00ffcc;
+      background: #2c2c38;
+    }
+    .oll-case-num {
+      font-size: 10px;
+      font-weight: 700;
+      color: #aaa;
+    }
+    /* Recognition diagram: the 3x3 top face inset in a 5x5 grid, with the
+       12 surrounding tabs showing which side stickers already face up. */
+    .oll-diagram {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      grid-template-rows: repeat(5, 1fr);
+      gap: 1px;
+      width: 40px;
+      height: 40px;
+    }
+    .oll-cell {
+      background: #33333f;
+      border-radius: 1px;
+    }
+    .oll-cell.on {
+      background: #FFD500;
+    }
+    .oll-cell.tab {
+      background: #2a2a33;
+      border-radius: 1px;
+    }
+    .oll-cell.tab.on {
+      background: #FFD500;
+    }
+    #pll-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.8);
+      z-index: 30;
+      align-items: center;
+      justify-content: center;
+    }
+    #pll-overlay.show {
+      display: flex;
+    }
+    #pll-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(66px, 1fr));
+      gap: 8px;
+      overflow-y: auto;
+      padding: 4px 2px 12px;
+      margin-bottom: 12px;
+    }
+    .pll-case-name {
+      font-size: 11px;
+      font-weight: 800;
+      color: #ddd;
+    }
+    /* PLL is recognised from the side sticker colours around the top face,
+       so the diagram shows the solved top plus those 12 coloured tabs. */
+    .pll-diagram {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      grid-template-rows: repeat(5, 1fr);
+      gap: 1px;
+      width: 44px;
+      height: 44px;
+    }
+    .pll-cell {
+      border-radius: 1px;
+      background: #FFD500;
+    }
+    .pll-cell.blank {
+      background: transparent;
+    }
+    .oll-cell.blank {
+      background: transparent;
+    }
+  </style>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+</head>
+<body>
+
+  <div id="header">
+    <div class="timer-box">
+      <span class="timer-label">TIME</span>
+      <div id="timer">00:00.00</div>
+      <div id="best-time">BEST: --:--.--</div>
+    </div>
+    <div class="top-btns">
+      <button class="menu-toggle" id="menu-toggle" aria-expanded="false" aria-controls="menu-actions" aria-label="メニューを開く">⋯</button>
+      <div class="menu-actions" id="menu-actions">
+        <button class="action-btn" id="records-btn">🏆 記録</button>
+        <button class="action-btn" id="settings-btn">⚙️ 設定</button>
+        <button class="action-btn" id="scramble-btn">🔀 シャッフル</button>
+        <button class="action-btn" id="reset-btn">↺ リセット</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="canvas-container">
+    <div id="fireworks-container" aria-hidden="true"></div>
+    <div id="msg">SOLVED! 🎉</div>
+  </div>
+
+  <div id="controls">
+    <div class="controls-label">← スライドで逆回転／正回転 スライドで →</div>
+    <div class="mode-indicator" id="mode-indicator">🎨 固定色モード（設定でON/OFFを切替できます）</div>
+    <div class="alg-row">
+      <button class="alg-btn" id="oll-btn" aria-label="OLL 57種を開く">OLL</button>
+      <span class="alg-spacer" aria-hidden="true"></span>
+      <button class="alg-btn" id="pll-btn" aria-label="PLL 21種を開く">PLL</button>
+    </div>
+    <div class="face-grid wide-grid" id="wide-grid">
+      <div class="face-card wide-card" id="lw-card" data-slot="6" role="button" tabindex="0">
+        <span class="edge-hint left">‹</span>
+        <span class="face-letter"></span>
+        <span class="edge-hint right">›</span>
+      </div>
+      <div class="wide-spacer" aria-hidden="true"></div>
+      <div class="face-card wide-card" id="rw-card" data-slot="7" role="button" tabindex="0">
+        <span class="edge-hint left">‹</span>
+        <span class="face-letter">Rw</span>
+        <span class="edge-hint right">›</span>
+      </div>
+    </div>
+    <div class="face-grid" id="face-grid">
+      <div class="face-card" data-slot="0" role="button" tabindex="0">
+        <span class="edge-hint left">‹</span>
+        <span class="face-letter"></span>
+        <span class="edge-hint right">›</span>
+      </div>
+      <div class="face-card" data-slot="1" role="button" tabindex="0">
+        <span class="edge-hint left">‹</span>
+        <span class="face-letter"></span>
+        <span class="edge-hint right">›</span>
+      </div>
+      <div class="face-card" data-slot="2" role="button" tabindex="0">
+        <span class="edge-hint left">‹</span>
+        <span class="face-letter"></span>
+        <span class="edge-hint right">›</span>
+      </div>
+      <div class="face-card" data-slot="3" role="button" tabindex="0">
+        <span class="edge-hint left">‹</span>
+        <span class="face-letter"></span>
+        <span class="edge-hint right">›</span>
+      </div>
+      <div class="face-card" data-slot="4" role="button" tabindex="0">
+        <span class="edge-hint left">‹</span>
+        <span class="face-letter"></span>
+        <span class="edge-hint right">›</span>
+      </div>
+      <div class="face-card" data-slot="5" role="button" tabindex="0">
+        <span class="edge-hint left">‹</span>
+        <span class="face-letter"></span>
+        <span class="edge-hint right">›</span>
+      </div>
+    </div>
+
+    <div class="face-card slice-card" id="h-card" role="button" tabindex="0" aria-label="ミドル層H：右にスライドでLと同じ向き、左でRと同じ向き">
+      <span class="edge-hint left">‹</span>
+      <span class="face-letter">H</span>
+      <span class="edge-hint right">›</span>
+    </div>
+  </div>
+
+
+  <div id="settings-overlay">
+    <div id="settings-panel">
+      <h2>ボタン配置設定</h2>
+
+      <div class="settings-toggle-row">
+        <span class="settings-toggle-label">回転に合わせて色を変える</span>
+        <button class="toggle-switch on" id="color-sync-toggle" role="switch" aria-checked="true" aria-label="回転に合わせて色を変える">
+          <span class="toggle-knob"></span>
+        </button>
+      </div>
+      <p class="settings-hint toggle-hint">OFFにすると、面の文字ごとの固定色で表示されます</p>
+
+      <div class="settings-toggle-row">
+        <span class="settings-toggle-label">回転を高速にする</span>
+        <button class="toggle-switch on" id="speed-toggle" role="switch" aria-checked="true" aria-label="回転を高速にする">
+          <span class="toggle-knob"></span>
+        </button>
+      </div>
+      <p class="settings-hint toggle-hint" id="speed-hint">ON：速い　／　OFF：普通</p>
+
+      <p class="settings-hint">入れ替えたい2つのボタンを順にタップ</p>
+      <div id="settings-grid"></div>
+      <div class="settings-actions">
+        <button class="action-btn" id="settings-reset">初期配置に戻す</button>
+        <button class="action-btn" id="settings-close">閉じる</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="records-overlay">
+    <div id="records-panel">
+      <h2>自己記録</h2>
+      <div id="records-best">BEST: --:--.--</div>
+      <p class="settings-hint">ソルブごとの記録（速い順・最大50件）／ <span class="record-badge oll">OLL</span> <span class="record-badge pll">PLL</span> は手順機能を使ったタイム</p>
+      <div id="records-list"></div>
+      <div class="settings-actions">
+        <button class="action-btn" id="records-clear">記録を消去</button>
+        <button class="action-btn" id="records-close">閉じる</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="oll-overlay">
+    <div class="alg-panel">
+      <h2>OLL <span class="oll-count">全57種</span></h2>
+
+      <div class="settings-toggle-row oll-mode-row">
+        <span class="settings-toggle-label" id="oll-mode-label">タップした手順を実行する</span>
+        <button class="toggle-switch on" id="oll-mode-toggle" role="switch" aria-checked="true" aria-label="タップ時の動作">
+          <span class="toggle-knob"></span>
+        </button>
+      </div>
+      <p class="settings-hint oll-mode-hint" id="oll-mode-hint">今のキューブに手順を実行します（OLLが揃った状態で使ってください）</p>
+
+      <div id="oll-grid"></div>
+      <div class="settings-actions">
+        <button class="action-btn" id="oll-close">閉じる</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="pll-overlay">
+    <div class="alg-panel">
+      <h2>PLL <span class="oll-count">全21種</span></h2>
+
+      <div class="settings-toggle-row oll-mode-row">
+        <span class="settings-toggle-label" id="pll-mode-label">タップした手順を実行する</span>
+        <button class="toggle-switch on" id="pll-mode-toggle" role="switch" aria-checked="true" aria-label="タップ時の動作">
+          <span class="toggle-knob"></span>
+        </button>
+      </div>
+      <p class="settings-hint oll-mode-hint" id="pll-mode-hint">今のキューブに手順を実行します（OLLまで揃った状態で使ってください）</p>
+
+      <div id="pll-grid"></div>
+      <div class="settings-actions">
+        <button class="action-btn" id="pll-close">閉じる</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // --- Customizable button layout ---
+    // This section only touches plain DOM/buttons and has zero dependency on
+    // Three.js, so the controls always render correctly even if the 3D engine
+    // below fails to load (e.g. slow network, blocked CDN, WebGL issue).
+    //
+    // Each of the 6 cards is colored with the face's real sticker color, so
+    // recognizing "which face" is a color-match rather than a notation
+    // lookup. The card is split into a left (↺ counter-clockwise) and right
+    // (↻ clockwise) tap zone, so direction is also visual rather than
+    // something you have to remember an apostrophe means.
+    const FACE_COLORS = {
+      U: { bg: '#FFFFFF', text: '#141416' },
+      D: { bg: '#FFD500', text: '#141416' },
+      L: { bg: '#FF5800', text: '#141416' },
+      R: { bg: '#B71234', text: '#ffffff' },
+      F: { bg: '#009E60', text: '#ffffff' },
+      B: { bg: '#0051BA', text: '#ffffff' }
+    };
+    // LW/RW have no sticker of their own -- they're still fundamentally the
+    // L/R faces, just wider -- so they borrow L's/R's color wherever they
+    // end up, and print as "Lw"/"Rw" to match standard wide-move notation.
+    function staticColorFor(letter) {
+      if (letter === 'LW') return FACE_COLORS.L;
+      if (letter === 'RW') return FACE_COLORS.R;
+      return FACE_COLORS[letter];
+    }
+    function displayLabel(letter) {
+      if (letter === 'LW') return 'Lw';
+      if (letter === 'RW') return 'Rw';
+      return letter;
+    }
+    // Grouped as a left-to-right sweep (L, F, R) over the remaining three
+    // (B, U, D), which reads a little more like scanning the cube than the
+    // plain alphabetical order did. LW/RW start above the L/R columns
+    // (slots 6/7, rendered in their own row -- see #wide-grid), but like
+    // every other slot here they're fully re-arrangeable in Settings.
+    const DEFAULT_LAYOUT = ['L', 'F', 'R', 'B', 'U', 'D', 'LW', 'RW'];
+    let buttonLayout = DEFAULT_LAYOUT.slice();
+    let selectedSlotIndex = null;
+    // Whether button colors track the cube's live orientation (dragging the
+    // cube can put a different color where a letter used to be) or stay on
+    // each letter's fixed notation color. Toggled from Settings.
+    let colorSyncEnabled = true;
+    // Turn animation length in milliseconds. Both settings are quicker than
+    // the old fixed 150ms; "fast" is near-instant for drilling algorithms,
+    // "normal" still reads clearly when following a sequence by eye.
+    const TURN_MS_FAST = 55;
+    const TURN_MS_NORMAL = 100;
+    let fastTurns = true;
+    const turnDuration = () => (fastTurns ? TURN_MS_FAST : TURN_MS_NORMAL);
+
+    const faceGrid = document.getElementById('face-grid');
+    const settingsBtn = document.getElementById('settings-btn');
+    const menuToggle = document.getElementById('menu-toggle');
+    const menuActions = document.getElementById('menu-actions');
+
+
+    let menuIdleTimer = null;
+    function setMenuOpen(open) {
+      menuActions.classList.toggle('open', open);
+      menuToggle.classList.toggle('open', open);
+      menuToggle.setAttribute('aria-expanded', String(open));
+      menuToggle.setAttribute('aria-label', open ? 'メニューを閉じる' : 'メニューを開く');
+      clearTimeout(menuIdleTimer);
+      // Don't leave it hanging open over the cube.
+      if (open) menuIdleTimer = setTimeout(() => setMenuOpen(false), 6000);
+    }
+    menuToggle.addEventListener('click', () => {
+      setMenuOpen(!menuActions.classList.contains('open'));
+    });
+
+    // Every action closes the menu behind it, so the controls are never
+    // sitting open while you go back to turning the cube.
+    function menuAction(btn, fn) {
+      btn.addEventListener('click', () => {
+        setMenuOpen(false);
+        fn();
+      });
+    }
+
+    const settingsOverlay = document.getElementById('settings-overlay');
+    const settingsGrid = document.getElementById('settings-grid');
+    const settingsCloseBtn = document.getElementById('settings-close');
+    const settingsResetBtn = document.getElementById('settings-reset');
+    const colorSyncToggle = document.getElementById('color-sync-toggle');
+    const modeIndicator = document.getElementById('mode-indicator');
+    const speedToggle = document.getElementById('speed-toggle');
+    const speedHint = document.getElementById('speed-hint');
+
+    function applySpeedMode() {
+      speedToggle.classList.toggle('on', fastTurns);
+      speedToggle.setAttribute('aria-checked', String(fastTurns));
+      speedHint.textContent = fastTurns
+        ? 'ON：速い（現在）　／　OFF：普通'
+        : 'ON：速い　／　OFF：普通（現在）';
+    }
+    speedToggle.addEventListener('click', () => {
+      fastTurns = !fastTurns;
+      applySpeedMode();
+    });
+    applySpeedMode();
+
+    function applyColorSyncMode() {
+      colorSyncToggle.classList.toggle('on', colorSyncEnabled);
+      colorSyncToggle.setAttribute('aria-checked', String(colorSyncEnabled));
+      modeIndicator.classList.toggle('show', !colorSyncEnabled);
+      renderControlButtons();
+    }
+    colorSyncToggle.addEventListener('click', () => {
+      colorSyncEnabled = !colorSyncEnabled;
+      applyColorSyncMode();
+    });
+
+    function triggerHaptics(pattern) {
+      if (navigator.vibrate) {
+        try { navigator.vibrate(pattern); } catch (err) { /* unsupported */ }
+      }
+    }
+
+    // Restarting a CSS animation requires removing the class, forcing a
+    // reflow, then re-adding it -- otherwise a rapid second slide on the
+    // same card is silently ignored because the animation is "already
+    // running". originPercent biases the ripple toward whichever side of
+    // the card was pushed.
+    function zap(card, dirClass, originPercent) {
+      card.style.setProperty('--ripple-origin', originPercent + '%');
+      card.classList.remove('zap', 'dir-left', 'dir-right');
+      void card.offsetWidth;
+      card.classList.add('zap', dirClass);
+    }
+
+    // Slide-to-turn: drag right past the commit distance for the normal
+    // move, left for the reverse. The letter eases along with the finger
+    // and the edge arrows light up as the drag approaches the commit
+    // point, so the card previews what will happen before you let go.
+    const SLIDE_MAX = 34;
+    const SLIDE_COMMIT = 20;
+
+    function attachSlideControl(card, onCommit) {
+      const letterEl = card.querySelector('.face-letter');
+      const leftHint = card.querySelector('.edge-hint.left');
+      const rightHint = card.querySelector('.edge-hint.right');
+      let dragging = false;
+      let startX = 0;
+      let dx = 0;
+
+      function updatePreview() {
+        const clamped = Math.max(-SLIDE_MAX, Math.min(SLIDE_MAX, dx));
+        letterEl.style.transform = `translateX(${clamped * 0.6}px)`;
+        const progressRight = Math.max(0, Math.min(1, clamped / SLIDE_COMMIT));
+        const progressLeft = Math.max(0, Math.min(1, -clamped / SLIDE_COMMIT));
+        rightHint.style.opacity = String(0.35 + progressRight * 0.65);
+        leftHint.style.opacity = String(0.35 + progressLeft * 0.65);
+        rightHint.style.transform = `scale(${1 + progressRight * 0.35})`;
+        leftHint.style.transform = `scale(${1 + progressLeft * 0.35})`;
+      }
+
+      function reset() {
+        letterEl.style.transform = '';
+        leftHint.style.opacity = '';
+        rightHint.style.opacity = '';
+        leftHint.style.transform = '';
+        rightHint.style.transform = '';
+      }
+
+      card.addEventListener('pointerdown', (e) => {
+        dragging = true;
+        startX = e.clientX;
+        dx = 0;
+        card.classList.add('dragging');
+        try { card.setPointerCapture(e.pointerId); } catch (err) { /* unsupported */ }
+      });
+
+      card.addEventListener('pointermove', (e) => {
+        if (!dragging) return;
+        dx = e.clientX - startX;
+        updatePreview();
+      });
+
+      function finish(e) {
+        if (!dragging) return;
+        dragging = false;
+        card.classList.remove('dragging');
+        if (e && e.pointerId != null) {
+          try { card.releasePointerCapture(e.pointerId); } catch (err) { /* already released */ }
+        }
+        if (dx >= SLIDE_COMMIT) {
+          triggerHaptics(14);
+          zap(card, 'dir-right', 85);
+          onCommit('cw');
+        } else if (dx <= -SLIDE_COMMIT) {
+          triggerHaptics(14);
+          zap(card, 'dir-left', 15);
+          onCommit('ccw');
+        }
+        reset();
+        dx = 0;
+      }
+
+      card.addEventListener('pointerup', finish);
+      card.addEventListener('pointercancel', finish);
+      card.addEventListener('pointerleave', (e) => { if (dragging) finish(e); });
+    }
+
+    // Wire up every swappable card once (the 6 face slots plus Lw/Rw at
+    // slots 6/7). Each one looks up its current letter from buttonLayout at
+    // slide time, so swapping positions in settings never requires
+    // re-attaching listeners.
+    document.querySelectorAll('.face-card[data-slot]').forEach((card) => {
+      const slot = Number(card.dataset.slot);
+      attachSlideControl(card, (dir) => {
+        makeTurn(dir === 'cw' ? buttonLayout[slot] : buttonLayout[slot] + "'");
+      });
+    });
+
+    // The H card (middle slice, between L and R) is the one control that
+    // stays fixed outside the swappable layout, since it has no single face
+    // of its own to be assigned a position. Sliding right (H) turns the
+    // same way an L turn would; left (H') the same way R would.
+    const hCard = document.getElementById('h-card');
+    attachSlideControl(hCard, (dir) => {
+      makeTurn(dir === 'cw' ? 'H' : "H'");
+    });
+
+    function renderControlButtons() {
+      buttonLayout.forEach((letter, i) => {
+        const card = document.querySelector(`.face-card[data-slot="${i}"]`);
+        const meta = staticColorFor(letter);
+        card.style.setProperty('--fc', meta.bg);
+        card.style.setProperty('--fc-text', meta.text);
+        card.querySelector('.face-letter').textContent = displayLabel(letter);
+        card.classList.toggle('wide-card', letter === 'LW' || letter === 'RW');
+        card.setAttribute('aria-label', displayLabel(letter) + '：右にスライドで正回転、左で逆回転');
+      });
+      // Overrides the fallback colors above with the cube's real current
+      // orientation, once the 3D side has loaded (see --- Three.js Setup ---).
+      if (typeof syncButtonColors === 'function') syncButtonColors();
+    }
+
+    function renderSettingsGrid() {
+      settingsGrid.innerHTML = '';
+      buttonLayout.forEach((letter, i) => {
+        const meta = staticColorFor(letter);
+        const slotBtn = document.createElement('button');
+        slotBtn.className = 'slot-btn' + (selectedSlotIndex === i ? ' selected' : '');
+        slotBtn.style.setProperty('--fc', meta.bg);
+        slotBtn.style.setProperty('--fc-text', meta.text);
+        slotBtn.innerHTML = `<span class="face-label">${displayLabel(letter)}</span>`;
+        slotBtn.addEventListener('click', () => onSlotTap(i));
+        settingsGrid.appendChild(slotBtn);
+      });
+    }
+
+    function onSlotTap(i) {
+      if (selectedSlotIndex === null) {
+        selectedSlotIndex = i;
+      } else if (selectedSlotIndex === i) {
+        selectedSlotIndex = null;
+      } else {
+        const tmp = buttonLayout[selectedSlotIndex];
+        buttonLayout[selectedSlotIndex] = buttonLayout[i];
+        buttonLayout[i] = tmp;
+        selectedSlotIndex = null;
+        renderControlButtons();
+      }
+      renderSettingsGrid();
+    }
+
+    menuAction(settingsBtn, () => {
+      selectedSlotIndex = null;
+      renderSettingsGrid();
+      settingsOverlay.style.display = 'flex';
+    });
+    settingsCloseBtn.addEventListener('click', () => {
+      settingsOverlay.style.display = 'none';
+    });
+    settingsResetBtn.addEventListener('click', () => {
+      buttonLayout = DEFAULT_LAYOUT.slice();
+      selectedSlotIndex = null;
+      renderControlButtons();
+      renderSettingsGrid();
+    });
+
+    renderControlButtons();
+
+    // --- Three.js Setup ---
+    // Wrapped in try/catch: if WebGL or the CDN script fails, the controls
+    // above (already wired up) stay fully visible and usable, and we show a
+    // clear error instead of a silently broken page.
+    try {
+    const container = document.getElementById('canvas-container');
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x121214);
+
+    const camera = new THREE.PerspectiveCamera(42, container.clientWidth / container.clientHeight, 0.1, 100);
+    camera.position.set(4.5, 3.8, 6.5);
+
+    const renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer.setSize(container.clientWidth, container.clientHeight);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    container.appendChild(renderer.domElement);
+
+    // Look slightly below center so the cube itself sits higher in the frame.
+    camera.lookAt(0, -0.9, 0);
+
+    // --- 90°-snapped drag rotation of the cube itself ---
+    // The gesture is locked to a single axis (horizontal swipe = yaw,
+    // vertical swipe = pitch) and always settles on an exact 90° multiple,
+    // so the cube view is never left tilted at a diagonal angle.
+    let isDragging = false;
+    let isSnapping = false;
+    let dragAxis = null; // 'x' (pitch) or 'y' (yaw), decided on first movement
+    let dragStartPointer = { x: 0, y: 0 };
+    let dragBaseQuaternion = new THREE.Quaternion();
+    let dragAngle = 0;
+    const dragRotateSpeed = 0.008;
+    const AXIS_LOCK_THRESHOLD = 6; // px of movement before committing to an axis
+
+    function onDragStart(x, y) {
+      if (isSnapping) return;
+      isDragging = true;
+      dragAxis = null;
+      dragAngle = 0;
+      dragStartPointer.x = x;
+      dragStartPointer.y = y;
+      dragBaseQuaternion.copy(cubeGroup.quaternion);
+    }
+
+    function onDragMove(x, y) {
+      if (!isDragging) return;
+      const totalDx = x - dragStartPointer.x;
+      const totalDy = y - dragStartPointer.y;
+
+      if (!dragAxis) {
+        if (Math.abs(totalDx) < AXIS_LOCK_THRESHOLD && Math.abs(totalDy) < AXIS_LOCK_THRESHOLD) return;
+        dragAxis = Math.abs(totalDx) > Math.abs(totalDy) ? 'y' : 'x';
+      }
+
+      const delta = dragAxis === 'y' ? totalDx : totalDy;
+      dragAngle = delta * dragRotateSpeed;
+      const axisVec = dragAxis === 'y' ? new THREE.Vector3(0, 1, 0) : new THREE.Vector3(1, 0, 0);
+      const q = new THREE.Quaternion().setFromAxisAngle(axisVec, dragAngle);
+      cubeGroup.quaternion.copy(dragBaseQuaternion).premultiply(q);
+    }
+
+    function onDragEnd() {
+      if (!isDragging) return;
+      isDragging = false;
+      if (!dragAxis) return;
+
+      const HALF_PI = Math.PI / 2;
+      const snappedAngle = Math.round(dragAngle / HALF_PI) * HALF_PI;
+      const axisVec = dragAxis === 'y' ? new THREE.Vector3(0, 1, 0) : new THREE.Vector3(1, 0, 0);
+      const rot = new THREE.Quaternion().setFromAxisAngle(axisVec, snappedAngle);
+
+      const startQuaternion = cubeGroup.quaternion.clone();
+      const endQuaternion = dragBaseQuaternion.clone().premultiply(rot);
+
+      isSnapping = true;
+      const duration = turnDuration();
+      const t0 = performance.now();
+      function animateSnap(now) {
+        const p = Math.min((now - t0) / duration, 1);
+        const ease = 1 - Math.pow(1 - p, 3);
+        cubeGroup.quaternion.copy(startQuaternion).slerp(endQuaternion, ease);
+        if (p < 1) {
+          requestAnimationFrame(animateSnap);
+        } else {
+          cubeGroup.quaternion.copy(endQuaternion);
+          isSnapping = false;
+          syncButtonColors();
+        }
+      }
+      requestAnimationFrame(animateSnap);
+      dragAxis = null;
+    }
+
+    renderer.domElement.addEventListener('pointerdown', (e) => {
+      renderer.domElement.setPointerCapture(e.pointerId);
+      onDragStart(e.clientX, e.clientY);
+    });
+    renderer.domElement.addEventListener('pointermove', (e) => {
+      onDragMove(e.clientX, e.clientY);
+    });
+    renderer.domElement.addEventListener('pointerup', onDragEnd);
+    renderer.domElement.addEventListener('pointercancel', onDragEnd);
+    renderer.domElement.addEventListener('pointerleave', onDragEnd);
+
+
+    // Lighting
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.7);
+    scene.add(ambientLight);
+    const dirLight1 = new THREE.DirectionalLight(0xffffff, 0.6);
+    dirLight1.position.set(10, 20, 15);
+    scene.add(dirLight1);
+    const dirLight2 = new THREE.DirectionalLight(0xffffff, 0.3);
+    dirLight2.position.set(-10, -10, -10);
+    scene.add(dirLight2);
+
+    // --- Cube Construction ---
+    const cubeGroup = new THREE.Group();
+    scene.add(cubeGroup);
+
+    const cubies = [];
+    const colors = {
+      R: 0xB71234, // Right (Red)
+      L: 0xFF5800, // Left (Orange)
+      U: 0xFFFFFF, // Top (White)
+      D: 0xFFD500, // Bottom (Yellow)
+      F: 0x009E60, // Front (Green)
+      B: 0x0051BA, // Back (Blue)
+      I: 0x18181c  // Inner (Dark Gray)
+    };
+
+    function createCubie(x, y, z) {
+      const geom = new THREE.BoxGeometry(0.94, 0.94, 0.94);
+      const mats = [
+        new THREE.MeshLambertMaterial({ color: x === 1 ? colors.R : colors.I }),
+        new THREE.MeshLambertMaterial({ color: x === -1 ? colors.L : colors.I }),
+        new THREE.MeshLambertMaterial({ color: y === 1 ? colors.U : colors.I }),
+        new THREE.MeshLambertMaterial({ color: y === -1 ? colors.D : colors.I }),
+        new THREE.MeshLambertMaterial({ color: z === 1 ? colors.F : colors.I }),
+        new THREE.MeshLambertMaterial({ color: z === -1 ? colors.B : colors.I })
+      ];
+      const mesh = new THREE.Mesh(geom, mats);
+      mesh.position.set(x, y, z);
+      mesh.userData = { initPos: new THREE.Vector3(x, y, z) };
+      return mesh;
+    }
+
+    function initCube() {
+      while (cubeGroup.children.length > 0) {
+        cubeGroup.remove(cubeGroup.children[0]);
+      }
+      cubies.length = 0;
+      for (let x = -1; x <= 1; x++) {
+        for (let y = -1; y <= 1; y++) {
+          for (let z = -1; z <= 1; z++) {
+            const cubie = createCubie(x, y, z);
+            cubies.push(cubie);
+            cubeGroup.add(cubie);
+          }
+        }
+      }
+    }
+    initCube();
+
+    // --- Rotation Logic ---
+    let isAnimating = false;
+    const moveQueue = [];
+
+    // World-space reference directions for each button, as seen by the (fixed) viewer.
+    const worldFaceDirs = {
+      F: new THREE.Vector3(0, 0, 1),
+      B: new THREE.Vector3(0, 0, -1),
+      U: new THREE.Vector3(0, 1, 0),
+      D: new THREE.Vector3(0, -1, 0),
+      R: new THREE.Vector3(1, 0, 0),
+      L: new THREE.Vector3(-1, 0, 0)
+    };
+
+    const localAxisCandidates = [
+      { axis: 'x', sign: 1,  vec: new THREE.Vector3(1, 0, 0),  letter: 'R' },
+      { axis: 'x', sign: -1, vec: new THREE.Vector3(-1, 0, 0), letter: 'L' },
+      { axis: 'y', sign: 1,  vec: new THREE.Vector3(0, 1, 0),  letter: 'U' },
+      { axis: 'y', sign: -1, vec: new THREE.Vector3(0, -1, 0), letter: 'D' },
+      { axis: 'z', sign: 1,  vec: new THREE.Vector3(0, 0, 1),  letter: 'F' },
+      { axis: 'z', sign: -1, vec: new THREE.Vector3(0, 0, -1), letter: 'B' }
+    ];
+
+    // Given a world-space button letter (F, U, R...), figure out which
+    // physical layer of the cube (in its own local coordinate frame)
+    // currently occupies that position from the viewer's perspective, since
+    // the whole cube may have been freely rotated by dragging. `letter` on
+    // the returned candidate is that layer's ORIGINAL face identity, which
+    // is what its center sticker color still is, no matter how the cube has
+    // been spun around.
+    function resolveLocalAxis(worldLetter) {
+      const worldTarget = worldFaceDirs[worldLetter];
+      if (!worldTarget) return null;
+
+      const invQuat = cubeGroup.quaternion.clone().invert();
+      const localTarget = worldTarget.clone().applyQuaternion(invQuat);
+
+      let best = localAxisCandidates[0];
+      let bestDot = -Infinity;
+      for (const c of localAxisCandidates) {
+        const d = c.vec.dot(localTarget);
+        if (d > bestDot) {
+          bestDot = d;
+          best = c;
+        }
+      }
+      return best;
+    }
+
+    // Every supported move, described as: which face's turning direction it
+    // follows, and which layers along that axis come with it.
+    //   outer  = the face's own layer   middle = the slice   far = opposite layer
+    // Screen-relative as always: 'R' means whatever is on the right now.
+    const MOVE_DEFS = {
+      R:  { like: 'R', layers: ['outer'] },
+      L:  { like: 'L', layers: ['outer'] },
+      U:  { like: 'U', layers: ['outer'] },
+      D:  { like: 'D', layers: ['outer'] },
+      F:  { like: 'F', layers: ['outer'] },
+      B:  { like: 'B', layers: ['outer'] },
+      RW: { like: 'R', layers: ['outer', 'middle'] },
+      LW: { like: 'L', layers: ['outer', 'middle'] },
+      UW: { like: 'U', layers: ['outer', 'middle'] },
+      DW: { like: 'D', layers: ['outer', 'middle'] },
+      FW: { like: 'F', layers: ['outer', 'middle'] },
+      BW: { like: 'B', layers: ['outer', 'middle'] },
+      H:  { like: 'L', layers: ['middle'] },  // the M slice, between L and R
+      E:  { like: 'D', layers: ['middle'] },  // between U and D
+      S:  { like: 'F', layers: ['middle'] },  // between F and B
+      X:  { like: 'R', layers: ['outer', 'middle', 'far'] },  // whole-cube turns
+      Y:  { like: 'U', layers: ['outer', 'middle', 'far'] },
+      Z:  { like: 'F', layers: ['outer', 'middle', 'far'] }
+    };
+
+    function resolveMove(move) {
+      const prime = move.endsWith("'");
+      const base = prime ? move.slice(0, -1) : move;
+      const def = MOVE_DEFS[base];
+      if (!def) return null;
+
+      const best = resolveLocalAxis(def.like);
+      if (!best) return null;
+
+      const layers = def.layers.map((slot) =>
+        slot === 'outer' ? best.sign : slot === 'far' ? -best.sign : 0);
+      let dir = -Math.sign(best.sign);
+      if (prime) dir = -dir;
+
+      return { axis: best.axis, layers, dir };
+    }
+
+    // Recolor every button to match what it will ACTUALLY turn right now.
+    // Button letters stay screen-relative (pressing "L" always turns
+    // whatever is currently on the left), but after dragging the cube
+    // around, the sticker facing left may no longer be orange -- so the
+    // color has to be looked up fresh from the cube's live orientation
+    // rather than hardcoded per letter.
+    // The colour actually showing on a given face right now, read from that
+    // face's centre piece. Works no matter how the colours got there --
+    // dragging the view, or a whole-cube rotation inside an algorithm.
+    function liveFaceColor(worldLetter) {
+      const best = resolveLocalAxis(worldLetter);
+      if (!best) return FACE_COLORS[worldLetter];
+      const axis = best.axis;
+      const sign = best.sign;
+      const centre = cubies.find((c) =>
+        Math.abs(c.position[axis] - sign) < 0.2 &&
+        ['x', 'y', 'z'].filter((a) => a !== axis).every((a) => Math.abs(c.position[a]) < 0.2));
+      if (!centre) return FACE_COLORS[worldLetter];
+      for (let i = 0; i < 6; i++) {
+        _stickerDir.copy(LOCAL_FACE_DIRS[i]).applyQuaternion(centre.quaternion);
+        if (Math.abs(_stickerDir[axis] - sign) < 0.1) {
+          const hex = centre.material[i].color.getHex();
+          for (const meta of Object.values(FACE_COLORS)) {
+            if (parseInt(meta.bg.slice(1), 16) === hex) return meta;
+          }
+        }
+      }
+      return FACE_COLORS[worldLetter];
+    }
+
+    function syncButtonColors() {
+      if (!colorSyncEnabled) {
+        // Fixed mode: every card shows its letter's notation color,
+        // regardless of how the cube has been dragged around.
+        buttonLayout.forEach((worldLetter, i) => {
+          const card = document.querySelector(`.face-card[data-slot="${i}"]`);
+          if (!card) return;
+          const meta = staticColorFor(worldLetter);
+          card.style.setProperty('--fc', meta.bg);
+          card.style.setProperty('--fc-text', meta.text);
+        });
+        hCard.style.setProperty('--fc-left', FACE_COLORS.L.bg);
+        hCard.style.setProperty('--fc-right', FACE_COLORS.R.bg);
+        return;
+      }
+
+      buttonLayout.forEach((worldLetter, i) => {
+        const card = document.querySelector(`.face-card[data-slot="${i}"]`);
+        if (!card) return;
+        // LW/RW have no face of their own -- they ride along with L/R's
+        // live color wherever they've been placed.
+        const faceLetter = worldLetter === 'LW' ? 'L' : worldLetter === 'RW' ? 'R' : worldLetter;
+        const meta = liveFaceColor(faceLetter);
+        card.style.setProperty('--fc', meta.bg);
+        card.style.setProperty('--fc-text', meta.text);
+      });
+
+      // H stays fixed and always shows a live split of the current L/R colors.
+      const leftMeta = liveFaceColor('L');
+      const rightMeta = liveFaceColor('R');
+      hCard.style.setProperty('--fc-left', leftMeta.bg);
+      hCard.style.setProperty('--fc-right', rightMeta.bg);
+    }
+
+    function makeTurn(move, instant = false) {
+      if (gameState === 'scrambled') {
+        startTimer();
+      }
+      if (isAnimating && !instant) {
+        moveQueue.push(move);
+        return;
+      }
+      executeTurn(move, instant);
+    }
+
+    function executeTurn(move, instant) {
+      const cfg = resolveMove(move);
+      if (!cfg) return;
+
+      const layerCubies = cubies.filter(c => {
+        const p = c.position;
+        return cfg.layers.some((L) => Math.abs(p[cfg.axis] - L) < 0.2);
+      });
+
+      const pivot = new THREE.Object3D();
+      cubeGroup.add(pivot);
+
+      layerCubies.forEach(c => pivot.attach(c));
+
+      const targetAngle = (Math.PI / 2) * cfg.dir;
+
+      if (instant) {
+        pivot.rotation[cfg.axis] = targetAngle;
+        pivot.updateMatrixWorld(true);
+        layerCubies.forEach(c => {
+          cubeGroup.attach(c);
+          snapCubie(c);
+        });
+        cubeGroup.remove(pivot);
+        if (moveQueue.length > 0) {
+          executeTurn(moveQueue.shift(), true);
+        }
+      } else {
+        isAnimating = true;
+        const duration = turnDuration();
+        const startTime = performance.now();
+
+        function animateTurn(now) {
+          const elapsed = now - startTime;
+          const progress = Math.min(elapsed / duration, 1);
+          const ease = 1 - Math.pow(1 - progress, 3);
+
+          pivot.rotation[cfg.axis] = targetAngle * ease;
+
+          if (progress < 1) {
+            requestAnimationFrame(animateTurn);
+          } else {
+            pivot.rotation[cfg.axis] = targetAngle;
+            pivot.updateMatrixWorld(true);
+            layerCubies.forEach(c => {
+              cubeGroup.attach(c);
+              snapCubie(c);
+            });
+            cubeGroup.remove(pivot);
+            isAnimating = false;
+
+            if (gameState === 'solving') {
+              checkSolved();
+            }
+
+            if (moveQueue.length > 0) {
+              executeTurn(moveQueue.shift(), false);
+            }
+          }
+        }
+        requestAnimationFrame(animateTurn);
+      }
+    }
+
+    function snapCubie(c) {
+      c.position.x = Math.round(c.position.x);
+      c.position.y = Math.round(c.position.y);
+      c.position.z = Math.round(c.position.z);
+
+      c.rotation.x = Math.round(c.rotation.x / (Math.PI / 2)) * (Math.PI / 2);
+      c.rotation.y = Math.round(c.rotation.y / (Math.PI / 2)) * (Math.PI / 2);
+      c.rotation.z = Math.round(c.rotation.z / (Math.PI / 2)) * (Math.PI / 2);
+      c.updateMatrix();
+    }
+
+    // --- Game Logic & Timer ---
+    let gameState = 'idle';
+    let timerInterval = null;
+    let startTime = 0;
+    // Only solves that began from a scramble are eligible for the records
+    // list; OLL/PLL practice setups deliberately leave this false.
+    let recordEligible = false;
+    // Whether the OLL / PLL trainer was used to help finish the current
+    // solve, so the saved time can be labelled honestly.
+    let usedOllThisSolve = false;
+    let usedPllThisSolve = false;
+
+    const timerEl = document.getElementById('timer');
+    const bestEl = document.getElementById('best-time');
+    const msgEl = document.getElementById('msg');
+    const fireworksContainer = document.getElementById('fireworks-container');
+    const recordsBtn = document.getElementById('records-btn');
+    const recordsOverlay = document.getElementById('records-overlay');
+    const recordsBestEl = document.getElementById('records-best');
+    const recordsListEl = document.getElementById('records-list');
+    const recordsClearBtn = document.getElementById('records-clear');
+    const recordsCloseBtn = document.getElementById('records-close');
+
+    function formatTime(ms) {
+      const totalSec = Math.floor(ms / 1000);
+      const min = String(Math.floor(totalSec / 60)).padStart(2, '0');
+      const sec = String(totalSec % 60).padStart(2, '0');
+      const cs = String(Math.floor((ms % 1000) / 10)).padStart(2, '0');
+      return `${min}:${sec}.${cs}`;
+    }
+
+    function startTimer() {
+      gameState = 'solving';
+      setMenuOpen(false); // never leave the controls open once a solve starts
+      startTime = Date.now();
+      clearInterval(timerInterval);
+      timerInterval = setInterval(() => {
+        const elapsed = Date.now() - startTime;
+        timerEl.textContent = formatTime(elapsed);
+        // Safety net: the primary solved-check runs right after each move's
+        // animation finishes, but also re-check here on every tick so a
+        // missed trigger (e.g. an animation frame that never fired while
+        // the tab was backgrounded) can't leave the timer running forever.
+        if (!isAnimating && gameState === 'solving') {
+          checkSolved();
+        }
+      }, 20);
+    }
+
+    function stopTimer() {
+      clearInterval(timerInterval);
+      const finalMs = Date.now() - startTime;
+      timerEl.textContent = formatTime(finalMs);
+
+      // Only a solve that started from a full scramble counts. Finishing a
+      // two-second OLL/PLL drill is not a personal best.
+      if (!recordEligible) return false;
+
+      const isNewBest = records.length === 0 || finalMs < records[0].ms;
+      addRecord(finalMs);
+      return isNewBest;
+    }
+
+    function resetTimer() {
+      clearInterval(timerInterval);
+      timerEl.textContent = '00:00.00';
+    }
+
+    // --- Personal records (persisted) ---
+    // Kept sorted fastest-first, capped at 50 entries. Stored via
+    // localStorage so records survive once this page is hosted and added to
+    // the iOS Home Screen as its own app (localStorage is tied to the page's
+    // URL, so it needs a real hosted origin -- see the setup notes for this
+    // file). Note: localStorage is blocked inside Claude.ai's own in-chat
+    // artifact preview, so records won't persist there; this is a deliberate
+    // trade-off for standalone/Home-Screen use.
+    const RECORDS_KEY = 'rubiks-cube-records';
+    let records = [];
+
+    function loadRecords() {
+      try {
+        const raw = localStorage.getItem(RECORDS_KEY);
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          if (Array.isArray(parsed.times)) records = parsed.times;
+        }
+      } catch (err) {
+        // No saved records yet, or storage unavailable (private browsing,
+        // Claude's artifact preview, etc.) -- start empty.
+        records = [];
+      }
+      refreshBestDisplay();
+    }
+
+    function saveRecords() {
+      try {
+        localStorage.setItem(RECORDS_KEY, JSON.stringify({ times: records }));
+      } catch (err) {
+        // Storage unavailable -- the record still counts for this session,
+        // it just won't carry over to the next visit.
+      }
+    }
+
+    function refreshBestDisplay() {
+      bestEl.textContent = records.length ? `BEST: ${formatTime(records[0].ms)}` : 'BEST: --:--.--';
+    }
+
+    function addRecord(ms) {
+      records.push({
+        ms,
+        at: new Date().toISOString(),
+        oll: usedOllThisSolve,
+        pll: usedPllThisSolve
+      });
+      records.sort((a, b) => a.ms - b.ms);
+      if (records.length > 50) records.length = 50;
+      refreshBestDisplay();
+      saveRecords();
+    }
+
+    function renderRecordsList() {
+      recordsBestEl.textContent = records.length ? `BEST: ${formatTime(records[0].ms)}` : 'BEST: --:--.--';
+      recordsListEl.innerHTML = '';
+      if (!records.length) {
+        recordsListEl.innerHTML = '<div class="records-empty">まだ記録がありません。シャッフルして揃えてみましょう。</div>';
+        return;
+      }
+      records.forEach((r, i) => {
+        const row = document.createElement('div');
+        row.className = 'record-row' + (i === 0 ? ' rank-1' : '');
+        const d = new Date(r.at);
+        const dateLabel = isNaN(d) ? '' :
+          `${d.getMonth() + 1}/${d.getDate()} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+        // Older saved records predate these flags, so treat a missing value
+        // as "no assist" rather than showing a badge by mistake.
+        const badges =
+          (r.oll ? '<span class="record-badge oll">OLL</span>' : '') +
+          (r.pll ? '<span class="record-badge pll">PLL</span>' : '');
+        row.innerHTML =
+          `<span class="record-rank">${i + 1}</span>` +
+          `<span class="record-time">${formatTime(r.ms)}</span>` +
+          `<span class="record-badges">${badges}</span>` +
+          `<span class="record-date">${dateLabel}</span>`;
+        recordsListEl.appendChild(row);
+      });
+    }
+
+    menuAction(recordsBtn, () => {
+      renderRecordsList();
+      recordsOverlay.classList.add('show');
+    });
+    recordsCloseBtn.addEventListener('click', () => {
+      recordsOverlay.classList.remove('show');
+    });
+
+    // Two-tap confirm (tap once to arm, tap again within 3s to actually
+    // clear) instead of a native confirm() dialog, consistent with how the
+    // rest of this app avoids browser chrome.
+    let clearArmed = false;
+    let clearArmedTimer = null;
+    recordsClearBtn.addEventListener('click', () => {
+      if (!clearArmed) {
+        clearArmed = true;
+        recordsClearBtn.textContent = 'もう一度タップで消去';
+        clearArmedTimer = setTimeout(() => {
+          clearArmed = false;
+          recordsClearBtn.textContent = '記録を消去';
+        }, 3000);
+        return;
+      }
+      clearTimeout(clearArmedTimer);
+      clearArmed = false;
+      recordsClearBtn.textContent = '記録を消去';
+      records = [];
+      refreshBestDisplay();
+      renderRecordsList();
+      saveRecords();
+    });
+
+    loadRecords();
+
+    // --- OLL trainer -----------------------------------------------------
+    // All 57 Orientation-of-the-Last-Layer cases. Each entry is
+    // [algorithm, pattern], where pattern is 21 characters describing the
+    // recognition diagram: 3 back tabs, 3 left tabs, 3 right tabs, 3 front
+    // tabs, then the 3x3 top face read back-row-first. '1' means that
+    // sticker already shows the top colour.
+    //
+    // This table was verified programmatically: every algorithm leaves the
+    // first two layers untouched, and the 57 produce 57 distinct cases with
+    // no duplicates -- which, since exactly 57 OLL cases exist, means the
+    // set is complete and correctly numbered.
+const OLL_DATA = {
+      1:["R U2 R2 F R F' U2 R' F R F'","010111111010000010000"],
+      2:["r U r' U2 r U2 R' U2 R U' r'","111011011010000010000"],
+      3:["r' R2 U R' U r U2 r' U M'","110010110011000010100"],
+      4:["M U' r U2 r' U' R U' R' M'","011110010110000010001"],
+      5:["l' U2 L U L' U l","000001110011110110000"],
+      6:["r U2 R' U' R U' r'","000110001110011011000"],
+      7:["r U R' U R U2 r'","100000110011010110100"],
+      8:["l' U' L U' L' U2 l","001110000110010011001"],
+      9:["R U R' U' R' F R2 U R' U' F'","001100010110010110001"],
+      10:["R U R' U R' F R F' R U2 R'","110001010001001110010"],
+      11:["r U R' U R' F R F' R U2 r'","100001010011011110000"],
+      12:["M' R' U' R U' R' U2 R U' R r'","001010001110110011000"],
+      13:["F U R U' R2 F' R U R U' R'","110000100011000111100"],
+      14:["R' F R U R' F' R F U' F'","011100000110000111001"],
+      15:["l' U' l L' U' L U l' U l","010001100011100111000"],
+      16:["r U r' R U R' U' r U' r'","010100001110001111000"],
+      17:["F R' F' R2 r' U R U' R' U' M'","010010110110100010001"],
+      18:["r U R' U R U2 r2 U' R U' R' U2 r","010010010111101010000"],
+      19:["r' R U R U R' U' M' R' F R F'","010011011010101010000"],
+      20:["r U R' U' M2 U R U' R' U' M'","010010010010101010101"],
+      21:["R U2 R' U' R U R' U' R U' R'","101000000101010111010"],
+      22:["R U2 R2 U' R2 U' R2 U2 R","001101000001010111010"],
+      23:["R2 D' R U2 R' D R U2 R","101000000000010111111"],
+      24:["r U R' U' r' F R F'","100000000100011111011"],
+      25:["F' r U R' U' r' F R","000100000001011111110"],
+      26:["R U2 R' U' R U' R'","000100001100011111010"],
+      27:["R U R' U R U2 R'","100000100001010111110"],
+      28:["r U R' U' r' R U R U' R'","000000010010111110101"],
+      29:["R U R' U' R U' R' F' U' F R U R'","100000010110011110001"],
+      30:["F R' F R2 U' R' U' R U R' F2","000100110010010110101"],
+      31:["R' U' F U R U' R' F' R","100010000110011011001"],
+      32:["L U F' U' L' U L F L'","001000010011110110100"],
+      33:["R U R' U' R' F R F'","110000000110001111001"],
+      34:["R U R2 U' R' F R U R U' F'","010100100010000111101"],
+      35:["R U2 R2 F R F' R U2 R'","010010100100100011011"],
+      36:["L' U' L U' L' U L U L F' L' F","001011000010110011001"],
+      37:["F R' F' R U R U' R'","000000110110110110001"],
+      38:["R U R' U R U' R' U' R' F R F'","100000011010011110100"],
+      39:["L F' L' U' L U F U' L'","110000001010001111100"],
+      40:["R' F R U R' U' F' U R","011001000010100111001"],
+      41:["R U R' U R U2 R' F R U R' U' F'","101000010010010110101"],
+      42:["R' U' R U' R' U2 R F R U R' U' F'","010000010101101110010"],
+      43:["F' U' L' U L F","000111000010011011001"],
+      44:["F U R U' R' F'","000000111010110110100"],
+      45:["F R U R' U' F'","010101000010001111001"],
+      46:["R' U' R' F R F' U R","000010111000110010110"],
+      47:["R' U' R' F R F' R' F R F' U R","100010101110010011000"],
+      48:["F R U R' U' R U R' U' F'","001101010011010110000"],
+      49:["r U' r2 U r2 U r2 U' r","001111000011010011000"],
+      50:["r' U r2 U' r2 U' r2 U r'","011111000001000011010"],
+      51:["F U R U' R' U R U' R' F'","110000101110000111000"],
+      52:["R U R' U R U' B U' B' R'","100010111100010010010"],
+      53:["l' U2 L U L' U' L U L' U l","101010000111010011000"],
+      54:["r U2 R' U' R U R' U' R U' r'","101000010111010110000"],
+      55:["R' F R U R U' R2 F' R2 U' R' U R U R'","111000000111000111000"],
+      56:["r' U' r U' R' U R U' R' U R r' U r","010101101010000111000"],
+      57:["R U R' U' M' U R U' r'","010000000010101111101"]
+    };
+
+    // Standard cube notation -> this app's internal move names. Wide turns
+    // and the middle slice already exist as the Lw/Rw/H controls.
+    // Standard cube notation -> this app's internal move names. Must cover
+    // every move the algorithm tables use: face turns, wide turns, the three
+    // slices, and whole-cube rotations.
+    const OLL_NOTATION = {
+      R: 'R', L: 'L', U: 'U', D: 'D', F: 'F', B: 'B',
+      r: 'RW', l: 'LW', u: 'UW', d: 'DW', f: 'FW', b: 'BW',
+      M: 'H', E: 'E', S: 'S',
+      x: 'X', y: 'Y', z: 'Z'
+    };
+
+    function parseAlgorithm(alg) {
+      const moves = [];
+      for (const token of alg.trim().split(/\s+/)) {
+        const m = token.match(/^([RLUDFBrludfbMESxyz])(['2]?)$/);
+        // Never skip quietly: an unrecognised token means the algorithm
+        // would run incomplete and leave the cube wrong.
+        if (!m || !OLL_NOTATION[m[1]]) {
+          console.error('Unsupported move "' + token + '" in algorithm: ' + alg);
+          return [];
+        }
+        const base = OLL_NOTATION[m[1]];
+        if (m[2] === '2') { moves.push(base); moves.push(base); }
+        else moves.push(m[2] === "'" ? base + "'" : base);
+      }
+      return moves;
+    }
+    const invertMove = (mv) => (mv.endsWith("'") ? mv.slice(0, -1) : mv + "'");
+
+    const ollBtn = document.getElementById('oll-btn');
+    const ollOverlay = document.getElementById('oll-overlay');
+    const ollGrid = document.getElementById('oll-grid');
+    const ollCloseBtn = document.getElementById('oll-close');
+    const ollModeToggle = document.getElementById('oll-mode-toggle');
+    const ollModeLabel = document.getElementById('oll-mode-label');
+    const ollModeHint = document.getElementById('oll-mode-hint');
+
+    // true  = run the algorithm on the cube as it is now (solve this OLL)
+    // false = reset and build the case, to practise solving it yourself
+    let ollRunMode = true;
+
+    function applyOllMode() {
+      ollModeToggle.classList.toggle('on', ollRunMode);
+      ollModeToggle.setAttribute('aria-checked', String(ollRunMode));
+      ollModeLabel.textContent = ollRunMode ? 'タップした手順を実行する' : 'タップした形をセットする';
+      ollModeHint.textContent = ollRunMode
+        ? '今のキューブに手順を実行します（OLLが揃った状態で使ってください）'
+        : 'キューブを一度リセットしてから、その形を作ります（練習用）';
+    }
+    ollModeToggle.addEventListener('click', () => {
+      ollRunMode = !ollRunMode;
+      applyOllMode();
+    });
+
+    function buildOllDiagram(pattern) {
+      const wrap = document.createElement('div');
+      wrap.className = 'oll-diagram';
+      const back = pattern.slice(0, 3);
+      const left = pattern.slice(3, 6);
+      const right = pattern.slice(6, 9);
+      const front = pattern.slice(9, 12);
+      const face = pattern.slice(12);
+
+      // 5x5 layout: corners blank, edges are the side tabs, middle is the face.
+      for (let row = 0; row < 5; row++) {
+        for (let col = 0; col < 5; col++) {
+          const cell = document.createElement('div');
+          const isCorner = (row === 0 || row === 4) && (col === 0 || col === 4);
+          if (isCorner) {
+            cell.className = 'oll-cell blank';
+          } else if (row === 0) {
+            cell.className = 'oll-cell tab' + (back[col - 1] === '1' ? ' on' : '');
+          } else if (row === 4) {
+            cell.className = 'oll-cell tab' + (front[col - 1] === '1' ? ' on' : '');
+          } else if (col === 0) {
+            cell.className = 'oll-cell tab' + (left[row - 1] === '1' ? ' on' : '');
+          } else if (col === 4) {
+            cell.className = 'oll-cell tab' + (right[row - 1] === '1' ? ' on' : '');
+          } else {
+            cell.className = 'oll-cell' + (face[(row - 1) * 3 + (col - 1)] === '1' ? ' on' : '');
+          }
+          wrap.appendChild(cell);
+        }
+      }
+      return wrap;
+    }
+
+    function runOllCase(num) {
+      const entry = OLL_DATA[num];
+      if (!entry || typeof makeTurn !== 'function') return;
+      const moves = parseAlgorithm(entry[0]);
+
+      if (ollRunMode) {
+        usedOllThisSolve = true; // the finished time gets an OLL label
+        moves.forEach((mv) => makeTurn(mv));
+      } else {
+        // Build the case: start from solved, then run the algorithm backwards.
+        resetCube();
+        for (let i = moves.length - 1; i >= 0; i--) makeTurn(invertMove(moves[i]), true);
+        // Treat it like a fresh scramble so the timer starts on the first
+        // move the player makes -- but a drill is never a personal best.
+        gameState = 'scrambled';
+        recordEligible = false;
+        usedOllThisSolve = false;
+        usedPllThisSolve = false;
+        resetTimer();
+      }
+      ollOverlay.classList.remove('show');
+    }
+
+    function renderOllGrid() {
+      if (ollGrid.childElementCount) return; // built once, reused after that
+      for (let n = 1; n <= 57; n++) {
+        const entry = OLL_DATA[n];
+        const btn = document.createElement('button');
+        btn.className = 'oll-case';
+        btn.setAttribute('aria-label', 'OLL ' + n + '：' + entry[0]);
+        btn.title = entry[0];
+        btn.appendChild(buildOllDiagram(entry[1]));
+        const num = document.createElement('span');
+        num.className = 'oll-case-num';
+        num.textContent = n;
+        btn.appendChild(num);
+        btn.addEventListener('click', () => runOllCase(n));
+        ollGrid.appendChild(btn);
+      }
+    }
+
+    ollBtn.addEventListener('click', () => {
+      renderOllGrid();
+      applyOllMode();
+      ollOverlay.classList.add('show');
+    });
+    ollCloseBtn.addEventListener('click', () => ollOverlay.classList.remove('show'));
+
+    // --- PLL trainer -----------------------------------------------------
+    // All 21 Permutation-of-the-Last-Layer cases. Each entry is
+    // [algorithm, pattern], where pattern is the 12 side-sticker colours
+    // around the top face -- 3 back, 3 left, 3 right, 3 front -- which is
+    // how PLL cases are recognised in practice.
+    //
+    // Verified programmatically: every algorithm leaves the first two layers
+    // untouched and is a pure permutation (nothing gets twisted), and the 21
+    // produce 21 distinct cases. Since exactly 21 PLL cases exist, the set is
+    // complete with no duplicates.
+const PLL_DATA = {
+      Aa:["x R' U R' D2 R U' R' D2 R2 x'","RBRBLLFRLFFB"],
+      Ab:["x R2 D2 R U R' D2 R U' R x'","FBLRLLBRBFFR"],
+      E:["x' R U' R' D R U R' D' R U R' D R U' R' D' x","LBRFLBFRBLFR"],
+      Ua:["R U' R U R U R U' R' U' R2","BBBLFLRLRFRF"],
+      Ub:["R2 U R U R' U' R' U' R' U R'","BBBLRLRFRFLF"],
+      H:["M2 U M2 U2 M2 U M2","BFBLRLRLRFBF"],
+      Z:["M2 U M2 U M' U2 M2 U2 M' U2","BLBLBLRFRFRF"],
+      T:["R U R' U' R' F R2 U' R' U' R U R' F'","BBRLRLFLBFFR"],
+      Ja:["x R2 F R F' R U2 r' U r U2 x'","BRRLLLFBBFFR"],
+      Jb:["R U R' F' R U R' U' R' F R2 U' R' U'","BBRLLLFFBFRR"],
+      F:["R' U' F' R U R' U' R' F R2 U' R' U' R U R' U R","BFRLLLFRBFBR"],
+      Ra:["R U' R' U' R U R D R' U' R D' R' U2 R' U'","BLRLBLFRBFFR"],
+      Rb:["R' U2 R U2 R' F R U R' U' R' F' R2 U'","RBLBLLBFRFRF"],
+      Ga:["R2 U R' U R' U' R U' R2 U' D R' U R D'","BFRLBLFLBFRR"],
+      Gb:["R' U' R U D' R2 U R' U R U' R U' R2 D","BLRLRLFFBFBR"],
+      Gc:["R2 U' R U' R U R' U R2 U D' R U' R' D","BRRLFLFLBFBR"],
+      Gd:["R U R' U' D R2 U' R U' R' U R' U R2 D'","BFRLRLFBBFLR"],
+      V:["R' U R' U' R D' R' D R' U D' R2 U' R2 D R2","FRBRLLRBLFFB"],
+      Y:["F R U' R' U' R U R' F' R U R' U' R' F R F'","FLBRBLRRLFFB"],
+      Na:["R U R' U R U R' F' R U R' U' R' F R2 U' R' U2 R U' R'","BBFLRRLLRBFF"],
+      Nb:["R' U R U' R' F' U' F R U R' F R' F' R U' R","FBBRRLRLLFFB"]
+    };
+
+    const pllBtn = document.getElementById('pll-btn');
+    const pllOverlay = document.getElementById('pll-overlay');
+    const pllGrid = document.getElementById('pll-grid');
+    const pllCloseBtn = document.getElementById('pll-close');
+    const pllModeToggle = document.getElementById('pll-mode-toggle');
+    const pllModeLabel = document.getElementById('pll-mode-label');
+    const pllModeHint = document.getElementById('pll-mode-hint');
+    let pllRunMode = true;
+
+    function applyPllMode() {
+      pllModeToggle.classList.toggle('on', pllRunMode);
+      pllModeToggle.setAttribute('aria-checked', String(pllRunMode));
+      pllModeLabel.textContent = pllRunMode ? 'タップした手順を実行する' : 'タップした形をセットする';
+      pllModeHint.textContent = pllRunMode
+        ? '今のキューブに手順を実行します（OLLまで揃った状態で使ってください）'
+        : 'キューブを一度リセットしてから、その形を作ります（練習用）';
+    }
+    pllModeToggle.addEventListener('click', () => {
+      pllRunMode = !pllRunMode;
+      applyPllMode();
+    });
+
+    function buildPllDiagram(pattern) {
+      const wrap = document.createElement('div');
+      wrap.className = 'pll-diagram';
+      const back = pattern.slice(0, 3);
+      const left = pattern.slice(3, 6);
+      const right = pattern.slice(6, 9);
+      const front = pattern.slice(9, 12);
+      const colorOf = (letter) => (FACE_COLORS[letter] ? FACE_COLORS[letter].bg : '#33333f');
+
+      for (let row = 0; row < 5; row++) {
+        for (let col = 0; col < 5; col++) {
+          const cell = document.createElement('div');
+          const isCorner = (row === 0 || row === 4) && (col === 0 || col === 4);
+          if (isCorner) {
+            cell.className = 'pll-cell blank';
+          } else {
+            cell.className = 'pll-cell';
+            if (row === 0) cell.style.background = colorOf(back[col - 1]);
+            else if (row === 4) cell.style.background = colorOf(front[col - 1]);
+            else if (col === 0) cell.style.background = colorOf(left[row - 1]);
+            else if (col === 4) cell.style.background = colorOf(right[row - 1]);
+            // the middle 3x3 keeps the default solved top colour
+          }
+          wrap.appendChild(cell);
+        }
+      }
+      return wrap;
+    }
+
+    function runPllCase(name) {
+      const entry = PLL_DATA[name];
+      if (!entry || typeof makeTurn !== 'function') return;
+      const moves = parseAlgorithm(entry[0]);
+
+      if (pllRunMode) {
+        usedPllThisSolve = true; // the finished time gets a PLL label
+        moves.forEach((mv) => makeTurn(mv));
+      } else {
+        resetCube();
+        for (let i = moves.length - 1; i >= 0; i--) makeTurn(invertMove(moves[i]), true);
+        gameState = 'scrambled';
+        recordEligible = false; // practice runs never count as a personal best
+        usedOllThisSolve = false;
+        usedPllThisSolve = false;
+        resetTimer();
+      }
+      pllOverlay.classList.remove('show');
+    }
+
+    function renderPllGrid() {
+      if (pllGrid.childElementCount) return;
+      for (const [name, entry] of Object.entries(PLL_DATA)) {
+        const btn = document.createElement('button');
+        btn.className = 'oll-case';
+        btn.setAttribute('aria-label', 'PLL ' + name + '：' + entry[0]);
+        btn.title = entry[0];
+        btn.appendChild(buildPllDiagram(entry[1]));
+        const label = document.createElement('span');
+        label.className = 'pll-case-name';
+        label.textContent = name;
+        btn.appendChild(label);
+        btn.addEventListener('click', () => runPllCase(name));
+        pllGrid.appendChild(btn);
+      }
+    }
+
+    pllBtn.addEventListener('click', () => {
+      renderPllGrid();
+      applyPllMode();
+      pllOverlay.classList.add('show');
+    });
+    pllCloseBtn.addEventListener('click', () => pllOverlay.classList.remove('show'));
+
+    function scrambleCube() {
+      // Neutralize gameState before scrambling: makeTurn() starts the timer
+      // whenever gameState is 'scrambled', and it would still be 'scrambled'
+      // here if Scramble is pressed twice in a row (or after any earlier
+      // scramble) without an intervening solve. Without this, the scramble's
+      // own internal moves -- not the player's first real move -- would
+      // trigger the timer.
+      gameState = 'idle';
+      resetTimer();
+      initCube();
+      msgEl.style.opacity = '0';
+      const moves = ['U', "U'", 'D', "D'", 'L', "L'", 'R', "R'", 'F', "F'", 'B', "B'"];
+      for (let i = 0; i < 22; i++) {
+        const randMove = moves[Math.floor(Math.random() * moves.length)];
+        makeTurn(randMove, true);
+      }
+      gameState = 'scrambled';
+      recordEligible = true; // a genuine scramble: this solve counts
+      usedOllThisSolve = false;
+      usedPllThisSolve = false;
+    }
+
+    // Material index -> that face's outward direction in the cubie's own
+    // local frame (matches THREE.BoxGeometry's material order, as used in
+    // createCubie above).
+    const LOCAL_FACE_DIRS = [
+      new THREE.Vector3(1, 0, 0),
+      new THREE.Vector3(-1, 0, 0),
+      new THREE.Vector3(0, 1, 0),
+      new THREE.Vector3(0, -1, 0),
+      new THREE.Vector3(0, 0, 1),
+      new THREE.Vector3(0, 0, -1)
+    ];
+    const WORLD_FACES = [
+      { axis: 'x', sign: 1 }, { axis: 'x', sign: -1 },
+      { axis: 'y', sign: 1 }, { axis: 'y', sign: -1 },
+      { axis: 'z', sign: 1 }, { axis: 'z', sign: -1 }
+    ];
+    const _stickerDir = new THREE.Vector3();
+
+    // A cube is solved when all six faces each show a single color -- NOT
+    // when every piece is back at its exact starting position. Slice and
+    // wide turns (H, Lw, Rw) rotate inner layers, and combinations of them
+    // re-orient the entire cube's contents, so a perfectly solved cube can
+    // legitimately sit rotated relative to where it started (e.g. yellow on
+    // top instead of white). Checking actual sticker colors recognizes
+    // every such orientation, and also handles rotated centre pieces, which
+    // are visually identical but would fail a strict position check.
+    function isCubeSolved() {
+      for (const face of WORLD_FACES) {
+        let faceColor = null;
+        let seen = 0;
+        for (const c of cubies) {
+          if (Math.abs(c.position[face.axis] - face.sign) > 0.1) continue;
+          // Find which of this cubie's six stickers currently points out
+          // along this face's direction.
+          let stickerColor = null;
+          for (let i = 0; i < 6; i++) {
+            _stickerDir.copy(LOCAL_FACE_DIRS[i]).applyQuaternion(c.quaternion);
+            if (Math.abs(_stickerDir[face.axis] - face.sign) < 0.1) {
+              stickerColor = c.material[i].color.getHex();
+              break;
+            }
+          }
+          if (stickerColor === null) return false;
+          seen++;
+          if (faceColor === null) faceColor = stickerColor;
+          else if (faceColor !== stickerColor) return false;
+        }
+        if (seen !== 9) return false;
+      }
+      return true;
+    }
+
+    function checkSolved() {
+      if (!isCubeSolved()) return false;
+
+      gameState = 'solved';
+      const isNewBest = stopTimer();
+      if (isNewBest) {
+        msgEl.innerHTML = '🏆 自己ベスト更新！';
+      } else if (recordEligible) {
+        msgEl.innerHTML = 'SOLVED! 🎉';
+      } else {
+        msgEl.innerHTML = 'SOLVED! 🎉<span class="msg-sub">練習モード（記録対象外）</span>';
+      }
+      msgEl.style.opacity = '1';
+      msgEl.classList.remove('pop');
+      void msgEl.offsetWidth;
+      msgEl.classList.add('pop');
+      triggerHaptics(isNewBest ? [50, 40, 50, 40, 50, 40, 160] : [40, 40, 40, 40, 120]);
+      launchFireworks(isNewBest);
+      setTimeout(() => {
+        msgEl.style.opacity = '0';
+        msgEl.classList.remove('pop');
+      }, 3400);
+      return true;
+    }
+
+    // Small colored sparks burst outward from a few points and fade, reusing
+    // the cube's own sticker colors so the celebration ties back to the
+    // thing you just solved. A new personal best gets extra bursts.
+    function spawnFireworkBurst(cx, cy, count, colors) {
+      for (let i = 0; i < count; i++) {
+        const p = document.createElement('div');
+        p.className = 'fw-particle';
+        // Spread evenly around the circle with a little jitter, so bursts
+        // look like a full starburst rather than a random clump.
+        const angle = (i / count) * Math.PI * 2 + Math.random() * 0.5;
+        const dist = 80 + Math.random() * 130;
+        const dx = Math.cos(angle) * dist;
+        const dy = Math.sin(angle) * dist + 45; // downward drift, like gravity
+        const size = 6 + Math.random() * 6;
+        p.style.setProperty('--dx', dx.toFixed(1) + 'px');
+        p.style.setProperty('--dy', dy.toFixed(1) + 'px');
+        p.style.width = size.toFixed(1) + 'px';
+        p.style.height = size.toFixed(1) + 'px';
+        p.style.marginLeft = (-size / 2).toFixed(1) + 'px';
+        p.style.marginTop = (-size / 2).toFixed(1) + 'px';
+        p.style.left = cx + 'px';
+        p.style.top = cy + 'px';
+        const color = colors[Math.floor(Math.random() * colors.length)];
+        p.style.background = color;
+        p.style.color = color; // currentColor, used by the glow box-shadow
+        p.style.animationDuration = (850 + Math.random() * 500) + 'ms';
+        fireworksContainer.appendChild(p);
+        p.addEventListener('animationend', () => p.remove());
+      }
+    }
+
+    function launchFireworks(big) {
+      const rect = fireworksContainer.getBoundingClientRect();
+      const colors = Object.values(FACE_COLORS).map((m) => m.bg);
+
+      // A quick full-screen flash to punctuate the moment before the sparks.
+      fireworksContainer.classList.remove('flash', 'flash-best');
+      void fireworksContainer.offsetWidth;
+      fireworksContainer.classList.add(big ? 'flash-best' : 'flash');
+
+      const bursts = [
+        { x: 0.28, y: 0.40, delay: 0 },
+        { x: 0.72, y: 0.30, delay: 120 },
+        { x: 0.50, y: 0.55, delay: 250 },
+        { x: 0.18, y: 0.22, delay: 380 },
+        { x: 0.82, y: 0.60, delay: 500 },
+        { x: 0.50, y: 0.20, delay: 640 },
+        { x: 0.35, y: 0.68, delay: 780 },
+        { x: 0.65, y: 0.45, delay: 900 }
+      ];
+      if (big) {
+        bursts.push(
+          { x: 0.22, y: 0.55, delay: 1040 },
+          { x: 0.78, y: 0.25, delay: 1160 },
+          { x: 0.50, y: 0.38, delay: 1280 },
+          { x: 0.40, y: 0.28, delay: 1400 },
+          { x: 0.60, y: 0.62, delay: 1520 }
+        );
+      }
+      bursts.forEach((b) => {
+        setTimeout(
+          () => spawnFireworkBurst(rect.width * b.x, rect.height * b.y, big ? 34 : 26, colors),
+          b.delay
+        );
+      });
+    }
+
+    function resetCube() {
+      resetTimer();
+      initCube();
+      gameState = 'idle';
+      recordEligible = false;
+      usedOllThisSolve = false;
+      usedPllThisSolve = false;
+      msgEl.style.opacity = '0';
+    }
+
+    // --- Listeners ---
+    menuAction(document.getElementById('scramble-btn'), scrambleCube);
+    menuAction(document.getElementById('reset-btn'), resetCube);
+
+    window.addEventListener('resize', () => {
+      camera.aspect = container.clientWidth / container.clientHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(container.clientWidth, container.clientHeight);
+    });
+
+    // --- Render Loop ---
+    function animate() {
+      requestAnimationFrame(animate);
+      renderer.render(scene, camera);
+    }
+    syncButtonColors();
+    animate();
+    } catch (err) {
+      console.error('3D initialization failed:', err);
+      const container = document.getElementById('canvas-container');
+      container.innerHTML = '<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;padding:24px;text-align:center;color:#ff7788;font-size:14px;">3Dキューブの読み込みに失敗しました。<br>ページを再読み込みしてください。</div>';
+    }
+  </script>
+</body>
+</html>
