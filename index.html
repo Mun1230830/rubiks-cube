@@ -4058,6 +4058,231 @@
   @keyframes jp-flash-soft{ 0%{opacity:.35} 100%{opacity:0} }
 }
 /* === SHARD REWARD FX : CSS ここまで ====================================== */
+
+/* =========================================================================
+   タップキューブ チュートリアル (Tutorial / Coach marks)
+   -------------------------------------------------------------------------
+   構成は4つのレイヤーだけ:
+     #tut-scrim  … 画面を暗くする幕。要素にスポットライトを当てるステップ
+                    でのみ出す。キューブを触らせるステップでは出さない
+                    （キューブが暗くなると何を回しているか分からなくなる）。
+     #tut-hole   … box-shadow で 9999px の影を外側に落とすことで「穴」を
+                    作る。実測した矩形へ毎フレーム追従させる。
+     #tut-ghost  … 👆 のゴースト。3D 側から実測したスクリーン座標を
+                    --gx/--gy → --gx2/--gy2 の間で往復させる。
+     #tut-card   … 画面下部の説明カード。
+   どのレイヤーも pointer-events:none。幕でタップを塞ぐと
+   「ドロワーの外側タップで閉じる」「背景なぞりで全体回転」といった
+   既存のジェスチャーを軒並み壊してしまうため、視覚的な誘導だけに徹する。
+   ========================================================================= */
+#tut-root {
+  position: fixed;
+  inset: 0;
+  z-index: 4000;
+  pointer-events: none;
+  display: none;
+}
+#tut-root.show { display: block; }
+
+#tut-scrim {
+  position: absolute;
+  inset: 0;
+  background: rgba(8, 8, 14, 0.72);
+  opacity: 0;
+  transition: opacity 0.28s ease;
+}
+#tut-root.spotlight #tut-scrim { opacity: 1; }
+/* 穴を開けるときは幕そのものは消し、#tut-hole の巨大な影が幕の役を担う。
+   二重に暗くならないようにするため。 */
+#tut-root.spotlight.has-hole #tut-scrim { opacity: 0; }
+
+#tut-hole {
+  position: absolute;
+  left: 0; top: 0;
+  width: 0; height: 0;
+  border-radius: 999px;
+  box-shadow: 0 0 0 9999px rgba(8, 8, 14, 0.72);
+  border: 2px solid #00ffcc;
+  opacity: 0;
+  transition: opacity 0.28s ease, transform 0.28s ease;
+  will-change: transform;
+}
+#tut-root.has-hole #tut-hole { opacity: 1; }
+#tut-hole::after {
+  content: '';
+  position: absolute;
+  inset: -8px;
+  border-radius: inherit;
+  border: 2px solid rgba(0, 255, 204, 0.55);
+  animation: tut-pulse 1.6s ease-out infinite;
+}
+@keyframes tut-pulse {
+  0%   { transform: scale(0.94); opacity: 0.9; }
+  70%  { transform: scale(1.18); opacity: 0; }
+  100% { transform: scale(1.18); opacity: 0; }
+}
+
+/* --- 👆 ゴースト -------------------------------------------------------
+   --gx/--gy が始点、--gx2/--gy2 が終点。3D 側で実測したキューブ上の
+   ステッカー位置を毎フレーム流し込むので、視点を回してもゴーストは
+   正しい面に貼りついたまま動く。 */
+#tut-ghost {
+  position: absolute;
+  left: 0; top: 0;
+  font-size: 34px;
+  line-height: 1;
+  opacity: 0;
+  filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.7));
+  transform: translate(-50%, -30%);
+  transition: opacity 0.2s ease;
+}
+#tut-root.has-ghost #tut-ghost {
+  opacity: 1;
+  animation: tut-ghost-move 1.9s ease-in-out infinite;
+}
+@keyframes tut-ghost-move {
+  0%,  12%  { transform: translate(calc(var(--gx) - 50%), calc(var(--gy) - 30%)) scale(0.9); opacity: 0; }
+  22%       { transform: translate(calc(var(--gx) - 50%), calc(var(--gy) - 30%)) scale(1);   opacity: 1; }
+  62%       { transform: translate(calc(var(--gx2) - 50%), calc(var(--gy2) - 30%)) scale(1); opacity: 1; }
+  80%, 100% { transform: translate(calc(var(--gx2) - 50%), calc(var(--gy2) - 30%)) scale(0.9); opacity: 0; }
+}
+/* ゴーストがなぞる道すじ。線があるほうが「どこからどこまで」が一目で分かる。 */
+#tut-trail {
+  position: absolute;
+  left: 0; top: 0;
+  height: 6px;
+  border-radius: 3px;
+  background: linear-gradient(90deg, rgba(0,255,204,0), rgba(0,255,204,0.75));
+  transform-origin: 0 50%;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+#tut-root.has-ghost #tut-trail { opacity: 0.85; }
+
+/* --- 説明カード -------------------------------------------------------- */
+#tut-card {
+  position: absolute;
+  left: 50%;
+  bottom: max(14px, env(safe-area-inset-bottom, 0px));
+  transform: translateX(-50%);
+  width: min(440px, calc(100vw - 24px));
+  box-sizing: border-box;
+  padding: 14px 16px 12px;
+  border-radius: 18px;
+  background: rgba(20, 20, 28, 0.96);
+  border: 1.5px solid #3a3a4e;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.55);
+  /* カード本体は透過させ、押せるのはボタンだけにする。カードは画面下部に
+     居座るので、ここを auto にすると「キューブの下の段をなぞる」操作を
+     カードが横取りしてしまう（ステップ1のD面がまさにその位置）。 */
+  pointer-events: none;
+  transition: opacity 0.2s ease, transform 0.24s cubic-bezier(.2,.9,.3,1);
+}
+/* スポットライトが画面下部にあるステップでは、カードが対象に
+   かぶらないよう上へ逃がす。 */
+#tut-root.card-top #tut-card {
+  bottom: auto;
+  /* ヘッダー(タイマー・所持クリスタル・≡)の下に収まる高さ。76px だと
+     ≡ の下半分にカードが重なる。 */
+  top: calc(118px + env(safe-area-inset-top, 0px));
+}
+#tut-card.swap { opacity: 0; transform: translateX(-50%) translateY(8px); }
+
+.tut-step-label {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 1px;
+  color: #00ffcc;
+  margin: 0 0 4px;
+}
+#tut-title {
+  margin: 0 0 6px;
+  font-size: 17px;
+  font-weight: 800;
+  color: #fff;
+  line-height: 1.35;
+}
+#tut-body {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.6;
+  color: #cfcfdd;
+}
+#tut-body b { color: #fff; }
+#tut-body .tut-em { color: #00ffcc; font-weight: 800; }
+
+/* 「あと何回」のドット。4回まわす体験の進み具合をここで見せる。 */
+#tut-dots {
+  display: none;
+  gap: 7px;
+  margin-top: 10px;
+  align-items: center;
+}
+#tut-dots.on { display: flex; }
+#tut-dots i {
+  width: 11px; height: 11px;
+  border-radius: 50%;
+  background: #3a3a4e;
+  transition: background 0.2s ease, transform 0.2s ease;
+}
+#tut-dots i.done { background: #00ffcc; transform: scale(1.15); }
+
+#tut-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 12px;
+}
+#tut-skip, #tut-next { pointer-events: auto; }
+#tut-skip {
+  background: none;
+  border: none;
+  color: #8a8a9e;
+  font-size: 13px;
+  font-family: inherit;
+  padding: 6px 4px;
+  cursor: pointer;
+}
+#tut-skip:active { color: #cfcfdd; }
+#tut-next {
+  margin-left: auto;
+  border: none;
+  border-radius: 999px;
+  padding: 10px 22px;
+  font-size: 15px;
+  font-weight: 800;
+  font-family: inherit;
+  color: #08121a;
+  background: #00ffcc;
+  cursor: pointer;
+}
+#tut-next:active { transform: scale(0.97); }
+#tut-next[hidden] { display: none; }
+
+/* 4回まわし切った瞬間の「1周した」フラッシュ。 */
+#tut-card.cheer {
+  border-color: #00ffcc;
+  box-shadow: 0 0 0 3px rgba(0, 255, 204, 0.25), 0 10px 30px rgba(0, 0, 0, 0.55);
+}
+
+@media (max-width: 380px) {
+  #tut-title { font-size: 16px; }
+  #tut-body  { font-size: 13px; }
+  #tut-ghost { font-size: 28px; }
+}
+
+/* 動きを減らす設定では、ゴーストの往復もリングの脈打ちも止める。
+   位置(始点)だけ残せば「どこを触るか」は伝わる。 */
+@media (prefers-reduced-motion: reduce) {
+  #tut-root.has-ghost #tut-ghost {
+    animation: none;
+    transform: translate(calc(var(--gx) - 50%), calc(var(--gy) - 30%));
+    opacity: 1;
+  }
+  #tut-hole::after { animation: none; opacity: 0.6; }
+  #tut-card { transition: none; }
+}
+/* === タップキューブ チュートリアル : CSS ここまで ======================== */
   </style>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 </head>
@@ -4303,6 +4528,7 @@
       <p class="settings-hint size-hint" id="size-hint">左右にドラッグして微調整（1%〜160%）</p>
 
       <button class="action-btn layout-link-btn" id="open-welcome-btn" data-i18n="changeMode">回し方をもう一度選ぶ <span class="layout-link-arrow">›</span></button>
+      <button class="action-btn layout-link-btn" id="open-tutorial-btn" data-i18n="tutorialLink">遊び方をもう一度見る <span class="layout-link-arrow">›</span></button>
       <button class="action-btn layout-link-btn" id="open-layout-btn" data-i18n="layoutLink">ボタン配置を変更する <span class="layout-link-arrow">›</span></button>
       <div class="settings-actions">
         <button class="action-btn" id="settings-close" data-i18n="close">閉じる</button>
@@ -4581,6 +4807,30 @@
 
       <button type="button" class="welcome-start" id="welcome-start" data-i18n="startWithThis">この操作ではじめる</button>
       <p class="welcome-foot" data-i18n="welcomeFoot">☰ →「⚙️ 設定」からいつでも切り替えられます</p>
+    </div>
+  </div>
+
+  <!-- ============================================================
+       タップキューブ チュートリアル
+       「回し方を選ぶ」で “指でなぞる” を選んだ直後に一度だけ走る。
+       レイヤーはすべて pointer-events:none（カードのボタンだけ例外）で、
+       背後の操作を一切奪わない。ユーザーが実際に手を動かした結果を
+       イベントで受け取って次へ進む、という作りにしてある。
+  ============================================================ -->
+  <div id="tut-root" role="dialog" aria-live="polite" aria-labelledby="tut-title">
+    <div id="tut-scrim" aria-hidden="true"></div>
+    <div id="tut-hole" aria-hidden="true"></div>
+    <div id="tut-trail" aria-hidden="true"></div>
+    <div id="tut-ghost" aria-hidden="true">👆</div>
+    <div id="tut-card">
+      <p class="tut-step-label" id="tut-step-label"></p>
+      <h3 id="tut-title"></h3>
+      <p id="tut-body"></p>
+      <div id="tut-dots" aria-hidden="true"></div>
+      <div id="tut-actions">
+        <button type="button" id="tut-skip"></button>
+        <button type="button" id="tut-next" hidden></button>
+      </div>
     </div>
   </div>
 
@@ -5009,7 +5259,50 @@
                 "backOnTrack": "もとの形にもどせたよ。つづきを進めよう",
                 "tooManyWrong": "3手以上ちがう手が続いたので、いまの形から解き直すね",
                 "orientTitle": "📱 縦向きでプレイしよう！",
-                "orientSub": "<b>縦画面の方が</b>回しやすいよ。<br>端末をくるっと戻すと、続きからすぐに再開できます。"
+                "orientSub": "<b>縦画面の方が</b>回しやすいよ。<br>端末をくるっと戻すと、続きからすぐに再開できます。",
+
+                "tutorialLink": "遊び方をもう一度見る",
+                "tutSkip": "スキップ",
+                "tutNext": "つぎへ",
+                "tutStart": "はじめる",
+                "tutDone": "はじめる 🎉",
+                "tutStep": "ステップ {n} / 4",
+                "tutStepIntro": "ようこそ",
+
+                "tutIntroTitle": "ようこそ！",
+                "tutIntroBody": "まずは<b>30秒だけ</b>、指の使い方をいっしょに確認しましょう。<br>とちゅうでやめても、⚙️設定 からいつでもやり直せます。",
+
+                "tutTurnTitle": "指でなぞって回そう",
+                "tutTurnU": "手前の面の<span class=\"tut-em\">いちばん上の段</span>を、<b>横になぞって</b>みて。<br>ボタンはいりません。キューブを直接さわるだけ！",
+                "tutTurnR": "つぎは手前の面の<span class=\"tut-em\">いちばん右の列</span>を、<b>たてになぞって</b>みよう。",
+                "tutTurnF": "こんどは<span class=\"tut-em\">上の面</span>の<span class=\"tut-em\">手前の段</span>を、<b>横になぞって</b>みよう。",
+                "tutTurnL": "手前の面の<span class=\"tut-em\">いちばん左の列</span>を、<b>たてに</b>。もうコツはつかめたはず！",
+                "tutTurnD": "最後は手前の面の<span class=\"tut-em\">いちばん下の段</span>を、<b>横に</b>。",
+                "tutTurnGo": "同じ向きに、あと{n}回！",
+                "tutTurnLoopFirst": "🎉 <b>ぐるっと1周！</b><br>同じところを4回まわすと、ちゃんと<b>元どおりに戻ります</b>。だから、まちがえても大丈夫。",
+                "tutTurnLoop": "🎉 また元どおり！ 4回で1周、が合いことばです。",
+                "tutTurnWrong": "おっと、いまのは別のところ。もう一度いっしょに 👍",
+                "tutTurnBack": "いまのは逆向きだったみたい。同じ向きでそろえてみよう。",
+
+                "tutViewTitle": "裏側をのぞくには",
+                "tutViewBody": "キューブの<span class=\"tut-em\">外がわ（背景）</span>をなぞると、<b>全体がくるっと回って</b>裏側を見られます。<br>ためしに一度なぞってみて。",
+                "tutViewDone": "見えた！ 面をなぞれば<b>1つの段</b>、背景をなぞれば<b>全体</b>。この2つだけ覚えればOKです。",
+
+                "tutMenuTitle": "メニューを開いてみよう",
+                "tutMenuBody": "右上の <span class=\"tut-em\">≡</span> をタップしてみて。<br>困ったときの入り口はここ、と覚えておけば安心です。",
+                "tutMenuOpenTitle": "中身はこの2つだけ",
+                "tutMenuOpenBody": "🏆 <b>記録</b> … そろえた時間のベストがならびます。💡ヘルプを使った回は<b>別のランキング</b>になるので、気軽に使ってOK！<br>⚙️ <b>設定</b> … 色や見え方、言語をあとから変えられます。",
+
+                "tutShuffleTitle": "キューブをまぜてみよう",
+                "tutShuffleBody": "≡ の下の <span class=\"tut-em\">🔀</span> のつまみを、<br>① <b>下から上へ</b> 持ち上げて<br>② そのまま <b>少しだけ左へ</b> 倒す。<br><span class=\"tut-em\">L字</span>を描くイメージです。",
+                "tutShuffleArmed": "いいね！ そのまま <span class=\"tut-em\">左へ</span> 倒して！",
+                "tutShuffleDone": "<b>まざりました！</b> ここからタイマーがスタートします。<br>まっすぐなぞる操作はキューブの回転に使うので、シャッフルだけワザと折り返す形にしてあります。うっかり混ざる心配はありません。<br>※ つまみを<b>3秒おさえたまま</b>にすると、そろった状態に戻せます。",
+
+                "tutHelpTitle": "迷ったら、ここ 💡",
+                "tutHelpBody": "画面下の <span class=\"tut-em\">💡ヘルプ</span> を押すと、<b>お手本を見ながら1手ずつ</b>そろえられます。<br>使っても記録はちゃんと残るので、遠慮なくどうぞ。",
+                "tutHelpBodyOff": "いまは 💡ヘルプ を非表示にしています。<br>⚙️設定 の「ヘルプ機能」からいつでも表示に戻せます。",
+                "tutFinishTitle": "チュートリアルはこれで終わり！",
+                "tutFinishBody": "ゆっくりで大丈夫。まずは<b>1面</b>そろえてみよう 🎉"
           },
           "en": {
             "confirmSwitchTitle": "Use {lang}?",
@@ -5188,7 +5481,50 @@
                 "backOnTrack": "You are back on track — let's keep going",
                 "tooManyWrong": "More than 3 different moves, so let's re-solve from here",
                 "orientTitle": "📱 Play in portrait!",
-                "orientSub": "<b>Portrait</b> is much easier to turn.<br>Turn your device back and you can pick up right where you left off."
+                "orientSub": "<b>Portrait</b> is much easier to turn.<br>Turn your device back and you can pick up right where you left off.",
+
+                "tutorialLink": "Show me how to play again",
+                "tutSkip": "Skip",
+                "tutNext": "Next",
+                "tutStart": "Let's go",
+                "tutDone": "Start playing 🎉",
+                "tutStep": "Step {n} of 4",
+                "tutStepIntro": "Welcome",
+
+                "tutIntroTitle": "Welcome!",
+                "tutIntroBody": "Let's spend <b>30 seconds</b> getting your finger used to the cube.<br>You can stop anytime and start over from ⚙️ Settings.",
+
+                "tutTurnTitle": "Swipe to turn",
+                "tutTurnU": "Swipe <b>sideways</b> across the <span class=\"tut-em\">top row</span> of the face in front of you.<br>No buttons needed — just touch the cube.",
+                "tutTurnR": "Now swipe <b>up or down</b> along the <span class=\"tut-em\">rightmost column</span> of the front face.",
+                "tutTurnF": "This time swipe <b>sideways</b> across the <span class=\"tut-em\">front row of the top face</span>.",
+                "tutTurnL": "Swipe <b>up or down</b> along the <span class=\"tut-em\">leftmost column</span>. You've got this!",
+                "tutTurnD": "Last one — swipe <b>sideways</b> across the <span class=\"tut-em\">bottom row</span> of the front face.",
+                "tutTurnGo": "Same direction, {n} more to go!",
+                "tutTurnLoopFirst": "🎉 <b>Full circle!</b><br>Turn the same layer four times and it comes <b>right back to where it started</b>. So you can't break anything.",
+                "tutTurnLoop": "🎉 Back to the start again! Four turns is always one full circle.",
+                "tutTurnWrong": "Oops, that was a different layer. Let's try once more 👍",
+                "tutTurnBack": "That one went the other way. Try keeping the same direction.",
+
+                "tutViewTitle": "Peeking at the back",
+                "tutViewBody": "Swipe the <span class=\"tut-em\">background</span> around the cube and the <b>whole cube spins</b>, so you can see the far side.<br>Give it a try.",
+                "tutViewDone": "There it is! Swipe a face to turn <b>one layer</b>, swipe the background to turn <b>the whole cube</b>. That's all there is.",
+
+                "tutMenuTitle": "Open the menu",
+                "tutMenuBody": "Tap <span class=\"tut-em\">≡</span> at the top right.<br>Whenever you're stuck, this is the place to go.",
+                "tutMenuOpenTitle": "Just two things in here",
+                "tutMenuOpenBody": "🏆 <b>Records</b> — your best times. Solves that used 💡 Help go on <b>a separate board</b>, so use it freely!<br>⚙️ <b>Settings</b> — colours, view and language, all changeable later.",
+
+                "tutShuffleTitle": "Let's scramble it",
+                "tutShuffleBody": "Take the <span class=\"tut-em\">🔀</span> handle below ≡ and<br>① <b>lift it upward</b>, then<br>② <b>tip it slightly left</b>.<br>Think of drawing an <span class=\"tut-em\">L shape</span>.",
+                "tutShuffleArmed": "Nice! Now tip it <span class=\"tut-em\">to the left</span>!",
+                "tutShuffleDone": "<b>Scrambled!</b> The timer starts from here.<br>Straight swipes are reserved for turning the cube, so scrambling deliberately needs a corner — no accidental scrambles.<br>Tip: <b>hold the handle for 3 seconds</b> to reset to a solved cube.",
+
+                "tutHelpTitle": "Stuck? Tap here 💡",
+                "tutHelpBody": "<span class=\"tut-em\">💡 Help</span> at the bottom walks you through the solve <b>one move at a time</b>.<br>Your time is still recorded, so don't hesitate to use it.",
+                "tutHelpBodyOff": "💡 Help is currently hidden.<br>You can bring it back anytime from ⚙️ Settings.",
+                "tutFinishTitle": "That's the whole tutorial!",
+                "tutFinishBody": "No rush. Start by getting <b>one face</b> done 🎉"
           },
           "zh-CN": {
             "confirmSwitchTitle": "使用{lang}吗？",
@@ -7157,7 +7493,11 @@
       menuToggle.setAttribute('aria-label', open ? t('menuClose') : t('menuOpen'));
       clearTimeout(menuIdleTimer);
       // Don't leave it hanging open over the cube.
-      if (open) menuIdleTimer = setTimeout(() => setMenuOpen(false), 6000);
+      // ただしチュートリアルでドロワーの中身を説明している最中だけは別。
+      // 6秒の自動クローズが説明の途中で走ると、読んでいる本人には
+      // 「勝手に閉じた＝操作をまちがえた」としか見えない。
+      const tutHolding = window.__tut && window.__tut.active && window.__tut.holdMenu;
+      if (open && !tutHolding) menuIdleTimer = setTimeout(() => setMenuOpen(false), 6000);
     }
     onI18n(() => setMenuOpen(menuActions.classList.contains('open')));
     menuToggle.addEventListener('click', () => {
@@ -8030,10 +8370,17 @@
       // ではなくシャッフル済みの状態から始める。そろったキューブを渡されても
       // 何をすればいいのか分からないため。初回だけでなく、設定から選び直した
       // ときも同じ扱いにする（回し方を選び直す＝仕切り直しなので）。
-      if (tapCubeEnabled) {
+      //
+      // ただしチュートリアルを流すときだけは、この自動シャッフルを見送る。
+      // ステップ1の「同じところを4回まわすと元に戻る」は、そろった
+      // キューブでこそ一目で伝わるため。混ぜるのはステップ3で、本人の手で
+      // シャッフルを成功させた瞬間に行う。
+      const willRunTutorial = tapCubeEnabled && typeof shouldRunTutorial === 'function' && shouldRunTutorial();
+      if (tapCubeEnabled && !willRunTutorial) {
         if (typeof requestScramble === 'function') requestScramble();
         else scrambleWhenReady = true;   // 3D の準備がまだなら、できた時点で
       }
+      if (willRunTutorial) startTutorial();
       try {
         localStorage.setItem(ONBOARD_KEY, '1');
       } catch (err) { /* unavailable */ }
@@ -8298,6 +8645,446 @@
       if (hasLang) openWelcome(null);
       else openLang(true);
     }
+
+    /* ============================================================
+       タップキューブ チュートリアル (Tutorial)
+       ------------------------------------------------------------
+       設計の要点:
+       1. 読ませずに「やらせて、結果を見せる」。ステップの前進条件は
+          原則ユーザーの実操作（回した／開いた／混ぜた）であって、
+          「つぎへ」ボタンではない。
+       2. 背後の操作を一切奪わない。幕もリングもゴーストも
+          pointer-events:none。既存のジェスチャー（背景なぞりで全体回転、
+          ドロワー外タップで閉じる等）を壊さないための最優先事項。
+       3. 判定はすべてキューブのローカル座標系で行う。視点を回されても
+          「U を回した」の判定がぶれない。
+       4. 中断位置を保存する。途中でやめても、次は続きから出せる。
+
+       前進条件の一覧:
+         intro   … 「はじめる」ボタン
+         turn    … 対象の段を同じ向きに連続4回（cube-tap-turn を集計）
+         view    … 背景なぞりの90°スナップ完了（cube-view-rotated）
+         menu    … #menu-actions に .open が付いた（MutationObserver）
+         shuffle … cube-scrambled
+         その他  … 「つぎへ」ボタン
+       ============================================================ */
+    const TUTORIAL_KEY = 'rubiks-cube-tutorial';
+    const TUTORIAL_STEP_KEY = 'rubiks-cube-tutorial-step';
+
+    const tutRoot   = document.getElementById('tut-root');
+    const tutHole   = document.getElementById('tut-hole');
+    const tutGhost  = document.getElementById('tut-ghost');
+    const tutTrail  = document.getElementById('tut-trail');
+    const tutCard   = document.getElementById('tut-card');
+    const tutLabel  = document.getElementById('tut-step-label');
+    const tutTitle  = document.getElementById('tut-title');
+    const tutBody   = document.getElementById('tut-body');
+    const tutDots   = document.getElementById('tut-dots');
+    const tutSkip   = document.getElementById('tut-skip');
+    const tutNext   = document.getElementById('tut-next');
+    const openTutorialBtn = document.getElementById('open-tutorial-btn');
+
+    // window 経由で持つのは、gameState / makeTurn が init3D() の中の
+    // ローカル変数で、こちらのスコープから直接は触れないため。
+    window.__tut = { active: false, holdMenu: false };
+
+    // キューブのローカル座標。ステッカー面は 1.47 (=1 + 0.94/2) の位置。
+    const TUT_FACE = 1.47;
+
+    /* 「なぞる向き」と「回る段」の対応は resolveGrabTurn() の
+         回転軸 = 面の法線 × 指の進む向き
+       から決まる。つまり “上の面を横になぞると U が回る” のではなく、
+       上の面を横になぞると回るのは前後の段(F/B)。この対応表は実装の
+       挙動をそのまま写したもので、机上の想像で書き換えてはいけない。
+         U … 手前の面(法線 z)の 上の段 を横に  → z × x = y,  layer y=1
+         R … 手前の面の 右の列 をたてに        → z × y = -x, layer x=1
+         F … 上の面(法線 y)の 手前の段 を横に  → y × x = -z, layer z=1
+         L … 手前の面の 左の列 をたてに        → layer x=-1
+         D … 手前の面の 下の段 を横に          → layer y=-1
+       おかげで L も D も、その面が裏に隠れたままでも回せる。 */
+    const TUT_STEPS = [
+      { id: 'intro', phase: 0, mode: 'card',
+        titleKey: 'tutIntroTitle', bodyKey: 'tutIntroBody', nextKey: 'tutStart' },
+
+      { id: 'U', phase: 1, mode: 'turn', axis: 'y', layer: 1,
+        titleKey: 'tutTurnTitle', bodyKey: 'tutTurnU',
+        normal: [0, 0, 1], from: [-1, 1, TUT_FACE], to: [1, 1, TUT_FACE] },
+      { id: 'R', phase: 1, mode: 'turn', axis: 'x', layer: 1,
+        titleKey: 'tutTurnTitle', bodyKey: 'tutTurnR',
+        normal: [0, 0, 1], from: [1, -1, TUT_FACE], to: [1, 1, TUT_FACE] },
+      { id: 'F', phase: 1, mode: 'turn', axis: 'z', layer: 1,
+        titleKey: 'tutTurnTitle', bodyKey: 'tutTurnF',
+        normal: [0, 1, 0], from: [-1, TUT_FACE, 1], to: [1, TUT_FACE, 1] },
+      { id: 'L', phase: 1, mode: 'turn', axis: 'x', layer: -1,
+        titleKey: 'tutTurnTitle', bodyKey: 'tutTurnL',
+        normal: [0, 0, 1], from: [-1, -1, TUT_FACE], to: [-1, 1, TUT_FACE] },
+      { id: 'D', phase: 1, mode: 'turn', axis: 'y', layer: -1,
+        titleKey: 'tutTurnTitle', bodyKey: 'tutTurnD',
+        normal: [0, 0, 1], from: [-1, -1, TUT_FACE], to: [1, -1, TUT_FACE] },
+      { id: 'view', phase: 1, mode: 'view',
+        titleKey: 'tutViewTitle', bodyKey: 'tutViewBody' },
+
+      { id: 'menu', phase: 2, mode: 'menu', target: '#menu-toggle',
+        titleKey: 'tutMenuTitle', bodyKey: 'tutMenuBody' },
+      { id: 'menuOpen', phase: 2, mode: 'card', target: '#menu-actions', holdMenu: true,
+        titleKey: 'tutMenuOpenTitle', bodyKey: 'tutMenuOpenBody' },
+
+      { id: 'shuffle', phase: 3, mode: 'shuffle', target: '#shuffle-slider',
+        titleKey: 'tutShuffleTitle', bodyKey: 'tutShuffleBody' },
+
+      { id: 'help', phase: 4, mode: 'card', target: '#help-btn',
+        titleKey: 'tutHelpTitle', bodyKey: 'tutHelpBody' },
+      { id: 'finish', phase: 4, mode: 'card',
+        titleKey: 'tutFinishTitle', bodyKey: 'tutFinishBody', nextKey: 'tutDone' }
+    ];
+
+    let tutIndex = -1;
+    let tutTurnCount = 0;
+    let tutTurnDir = null;
+    let tutRAF = null;
+    let tutMenuObserver = null;
+    let tutArmObserver = null;
+    let tutLoopSeen = false;   // 「4回で戻る」の説明は最初の1回だけ手厚く
+
+    function tutStepDef() { return TUT_STEPS[tutIndex] || null; }
+
+    function shouldRunTutorial() {
+      // 「指でなぞる」を選んだ人のためのチュートリアルなので、
+      // 回転記号ボタン側を選んだ人には出さない。
+      if (typeof tapCubeEnabled !== 'undefined' && !tapCubeEnabled) return false;
+      try {
+        return localStorage.getItem(TUTORIAL_KEY) !== '1';
+      } catch (err) {
+        return true;   // storage が使えないなら、出すほうに倒す
+      }
+    }
+
+    function tutSaveProgress(done) {
+      try {
+        if (done) {
+          localStorage.setItem(TUTORIAL_KEY, '1');
+          localStorage.removeItem(TUTORIAL_STEP_KEY);
+        } else {
+          localStorage.setItem(TUTORIAL_STEP_KEY, String(Math.max(0, tutIndex)));
+        }
+      } catch (err) { /* storage unavailable -- 進行そのものには影響しない */ }
+    }
+
+    function tutRestoreStep() {
+      try {
+        const raw = localStorage.getItem(TUTORIAL_STEP_KEY);
+        const n = raw === null ? 0 : parseInt(raw, 10);
+        if (!Number.isFinite(n) || n < 0 || n >= TUT_STEPS.length) return 0;
+        return n;
+      } catch (err) { return 0; }
+    }
+
+    /* --- 画面追従ループ ---------------------------------------------------
+       スポットライトの穴もゴーストも、毎フレーム実測し直す。
+       #shuffle-slider の位置は positionShuffleSlider() が実測で書き換えるし、
+       キューブは指で回されるし、端末は回転する。固定値で持った瞬間に
+       「光っている場所」と「本当に触るべき場所」がズレる。 */
+    function tutTick() {
+      const st = tutStepDef();
+      if (!st) return;
+
+      if (st.target) {
+        const el = document.querySelector(st.target);
+        if (el && el.getClientRects().length) {
+          const r = el.getBoundingClientRect();
+          const pad = 10;
+          tutHole.style.left   = (r.left - pad) + 'px';
+          tutHole.style.top    = (r.top - pad) + 'px';
+          tutHole.style.width  = (r.width + pad * 2) + 'px';
+          tutHole.style.height = (r.height + pad * 2) + 'px';
+          tutHole.style.borderRadius =
+            Math.min(r.width, r.height) > 70 ? '18px' : '999px';
+          tutRoot.classList.add('has-hole');
+          // 対象が画面下寄りなら、カードを上へ逃がして重なりを防ぐ。
+          tutRoot.classList.toggle('card-top',
+            (r.top + r.height / 2) > window.innerHeight * 0.58);
+        } else {
+          tutRoot.classList.remove('has-hole');
+        }
+      }
+
+      if (st.from && window.tutCubeBridge) {
+        const br = window.tutCubeBridge;
+        const facing = !st.normal || !br.faceVisible ||
+          br.faceVisible(st.normal[0], st.normal[1], st.normal[2]);
+        if (!facing) {
+          tutRoot.classList.remove('has-ghost');
+          tutRAF = requestAnimationFrame(tutTick);
+          return;
+        }
+        const a = window.tutCubeBridge.screenPos(st.from[0], st.from[1], st.from[2]);
+        const b = window.tutCubeBridge.screenPos(st.to[0], st.to[1], st.to[2]);
+        // 3D の準備前や、視点の都合で対象の面が画面外へ回り込んだときは、
+        // 投影結果が画面外の値になる。そのまま描くと、キューブとは無関係な
+        // 場所を指す指と線が出て「そこを触るのか？」と誤解させるので、
+        // 画面内に収まっているときだけ出す。
+        const sane = (p) => p &&
+          p.x > -40 && p.x < window.innerWidth + 40 &&
+          p.y > -40 && p.y < window.innerHeight + 40;
+        const span = (a && b) ? Math.hypot(b.x - a.x, b.y - a.y) : Infinity;
+        if (sane(a) && sane(b) && span > 12 &&
+            span < Math.hypot(window.innerWidth, window.innerHeight) * 0.6) {
+          tutRoot.style.setProperty('--gx', a.x + 'px');
+          tutRoot.style.setProperty('--gy', a.y + 'px');
+          tutRoot.style.setProperty('--gx2', b.x + 'px');
+          tutRoot.style.setProperty('--gy2', b.y + 'px');
+          const dx = b.x - a.x, dy = b.y - a.y;
+          tutTrail.style.left = a.x + 'px';
+          tutTrail.style.top = (a.y - 3) + 'px';
+          tutTrail.style.width = Math.hypot(dx, dy) + 'px';
+          tutTrail.style.transform = 'rotate(' + Math.atan2(dy, dx) + 'rad)';
+          tutRoot.classList.add('has-ghost');
+        } else {
+          tutRoot.classList.remove('has-ghost');
+        }
+      }
+
+      tutRAF = requestAnimationFrame(tutTick);
+    }
+
+    /* --- カードの描き替え -------------------------------------------------- */
+    function tutPaintDots() {
+      const st = tutStepDef();
+      if (!st || st.mode !== 'turn') { tutDots.classList.remove('on'); return; }
+      tutDots.classList.add('on');
+      tutDots.innerHTML = '';
+      for (let i = 0; i < 4; i++) {
+        const d = document.createElement('i');
+        if (i < tutTurnCount) d.classList.add('done');
+        tutDots.appendChild(d);
+      }
+    }
+
+    function tutSetCard(titleKey, bodyKey, opts) {
+      const o = opts || {};
+      const st = tutStepDef();
+      tutLabel.textContent = (st && st.phase > 0)
+        ? t('tutStep', { n: st.phase })
+        : t('tutStepIntro');
+      tutTitle.textContent = t(titleKey);
+      tutBody.innerHTML = o.rawBody !== undefined ? o.rawBody : t(bodyKey);
+      const showNext = !!o.nextKey;
+      tutNext.hidden = !showNext;
+      if (showNext) tutNext.textContent = t(o.nextKey);
+      tutSkip.textContent = t('tutSkip');
+      tutPaintDots();
+    }
+
+    // 進行中のステップの文言だけを差し替える（「あと2回！」など）。
+    function tutFlash(bodyKey, vars) {
+      tutBody.innerHTML = t(bodyKey, vars);
+    }
+
+    function tutCheer() {
+      tutCard.classList.add('cheer');
+      setTimeout(() => tutCard.classList.remove('cheer'), 900);
+      if (typeof triggerHaptics === 'function') { try { triggerHaptics(24); } catch (e) {} }
+    }
+
+    /* --- ステップ遷移 ------------------------------------------------------ */
+    function tutTeardownWatchers() {
+      if (tutMenuObserver) { tutMenuObserver.disconnect(); tutMenuObserver = null; }
+      if (tutArmObserver) { tutArmObserver.disconnect(); tutArmObserver = null; }
+    }
+
+    function tutGoTo(i) {
+      tutTeardownWatchers();
+      tutIndex = i;
+      if (tutIndex >= TUT_STEPS.length) { finishTutorial(true); return; }
+
+      const st = tutStepDef();
+      tutTurnCount = 0;
+      tutTurnDir = null;
+      window.__tut.holdMenu = !!st.holdMenu;
+
+      // レイヤーの出し分け。キューブを触らせるステップでは幕を張らない
+      // （暗くすると、いま何がどう回ったのかが見えなくなる）。
+      const spotlight = !!st.target;
+      tutRoot.classList.toggle('spotlight', spotlight);
+      if (!spotlight) {
+        tutRoot.classList.remove('has-hole');
+        tutRoot.classList.remove('card-top');
+      }
+      if (!st.from) {
+        tutRoot.classList.remove('has-ghost');
+      }
+
+      // 💡ヘルプは設定で非表示にできる。その場合ボタンは display:none なので、
+      // 何もない場所にリングを出さず、文面のほうを差し替える。
+      if (st.id === 'help') {
+        const hb = document.getElementById('help-btn');
+        const visible = hb && hb.getClientRects().length > 0;
+        if (!visible) {
+          tutRoot.classList.remove('spotlight', 'has-hole');
+          tutSetCard('tutHelpTitle', 'tutHelpBodyOff', { nextKey: 'tutNext' });
+          return;
+        }
+      }
+
+      tutSetCard(st.titleKey, st.bodyKey, {
+        nextKey: st.nextKey || (st.mode === 'card' ? 'tutNext' : null)
+      });
+
+      // ステップ固有の待ち受け
+      if (st.mode === 'menu') {
+        const ma = document.getElementById('menu-actions');
+        tutMenuObserver = new MutationObserver(() => {
+          if (ma.classList.contains('open')) tutAdvance();
+        });
+        tutMenuObserver.observe(ma, { attributes: true, attributeFilter: ['class'] });
+      }
+      if (st.mode === 'shuffle') {
+        // 「①持ち上げた」だけで止まっている人に、②を名指しで伝える。
+        // ここで励ましが入るかどうかで、この二段階ジェスチャーの
+        // 成功率はまるで変わる。
+        const ss = document.getElementById('shuffle-slider');
+        tutArmObserver = new MutationObserver(() => {
+          if (tutStepDef() !== st) return;
+          if (ss.classList.contains('armed')) tutFlash('tutShuffleArmed');
+          else tutSetCard(st.titleKey, st.bodyKey, {});
+        });
+        tutArmObserver.observe(ss, { attributes: true, attributeFilter: ['class'] });
+      }
+      if (st.id === 'menuOpen') {
+        // 説明する対象が閉じていては話にならないので開けておく。
+        if (typeof setMenuOpen === 'function') setMenuOpen(true);
+      }
+
+      tutSaveProgress(false);
+    }
+
+    function tutAdvance(delay) {
+      const from = tutIndex;
+      const go = () => { if (tutIndex === from) tutGoTo(from + 1); };
+      if (delay) setTimeout(go, delay);
+      else go();
+    }
+
+    /* --- 実操作の受け取り -------------------------------------------------- */
+    window.addEventListener('cube-tap-turn', (e) => {
+      const st = tutStepDef();
+      if (!window.__tut.active || !st || st.mode !== 'turn') return;
+      const d = e.detail;
+
+      // 別の段を回してしまったとき。責めずに、目標はそのままで数え直す。
+      if (d.axis !== st.axis || d.layer !== st.layer) {
+        tutTurnCount = 0;
+        tutTurnDir = null;
+        tutFlash('tutTurnWrong');
+        tutPaintDots();
+        return;
+      }
+      // 向きが変わったら、そこから新しい1回目として数え直す。
+      // 逆回しを混ぜると1周にならないので、ここは厳密に見る。
+      if (tutTurnDir !== null && d.dir !== tutTurnDir) {
+        tutTurnCount = 1;
+        tutTurnDir = d.dir;
+        tutFlash('tutTurnBack');
+        tutPaintDots();
+        return;
+      }
+      tutTurnDir = d.dir;
+      tutTurnCount++;
+      tutPaintDots();
+
+      if (tutTurnCount >= 4) {
+        tutCheer();
+        tutFlash(tutLoopSeen ? 'tutTurnLoop' : 'tutTurnLoopFirst');
+        tutLoopSeen = true;
+        tutAdvance(tutLoopSeen && tutIndex > 1 ? 1500 : 2600);
+      } else {
+        tutFlash('tutTurnGo', { n: 4 - tutTurnCount });
+      }
+    });
+
+    window.addEventListener('cube-view-rotated', () => {
+      const st = tutStepDef();
+      if (!window.__tut.active || !st || st.mode !== 'view') return;
+      tutCheer();
+      tutFlash('tutViewDone');
+      tutAdvance(2400);
+    });
+
+    window.addEventListener('cube-scrambled', () => {
+      const st = tutStepDef();
+      if (!window.__tut.active || !st || st.mode !== 'shuffle') return;
+      tutTeardownWatchers();
+      tutCheer();
+      tutSetCard('tutShuffleTitle', 'tutShuffleDone', { nextKey: 'tutNext' });
+      // ここで初めて計測対象の局面に入る。以降 makeTurn() は通常どおり
+      // タイマーを起動してよいので、__tut.active は次のステップで
+      // 保持しつつ、gameState 側の抑制は scramble 済みの今から外す。
+      window.__tut.scrambled = true;
+    });
+
+    /* --- 開始・終了 -------------------------------------------------------- */
+    function startTutorial(fromStep) {
+      window.__tut.active = true;
+      window.__tut.scrambled = false;
+      tutLoopSeen = false;
+      tutRoot.classList.add('show');
+      if (tutRAF) cancelAnimationFrame(tutRAF);
+      tutRAF = requestAnimationFrame(tutTick);
+      tutGoTo(typeof fromStep === 'number' ? fromStep : 0);
+    }
+
+    function finishTutorial(completed) {
+      tutTeardownWatchers();
+      window.__tut.active = false;
+      window.__tut.holdMenu = false;
+      tutIndex = -1;
+      if (tutRAF) { cancelAnimationFrame(tutRAF); tutRAF = null; }
+      tutRoot.classList.remove('show', 'spotlight', 'has-hole', 'has-ghost', 'card-top');
+      if (typeof setMenuOpen === 'function') setMenuOpen(false);
+      tutSaveProgress(true);
+      // シャッフルまで到達せずに抜けた場合は、ここで混ぜて通常の
+      // スタート地点に合わせる（そろったキューブを渡されても、
+      // 何をすればいいのか分からないため）。
+      if (!window.__tut.scrambled && typeof tapCubeEnabled !== 'undefined' && tapCubeEnabled) {
+        if (typeof requestScramble === 'function') requestScramble();
+        else scrambleWhenReady = true;
+      }
+    }
+
+    tutNext.addEventListener('click', () => {
+      const st = tutStepDef();
+      if (st && st.id === 'finish') { finishTutorial(true); return; }
+      tutAdvance();
+    });
+    tutSkip.addEventListener('click', () => { finishTutorial(false); });
+
+    if (openTutorialBtn) {
+      openTutorialBtn.addEventListener('click', () => {
+        settingsOverlay.style.display = 'none';
+        // 見直しは最初から。途中再開は「離脱してすぐ戻ってきた」場合の
+        // 救済であって、自分から見に来た人が求めているものではない。
+        startTutorial(0);
+      });
+    }
+    // 中断して離脱していた場合は、次の起動でその続きから出す。
+    // 言語だけ選んで落ちた場合などは welcome 側の導線が先に走る。
+    (function resumeTutorialIfNeeded() {
+      if (!shouldRunTutorial()) return;
+      if (typeof hasOnboarded === 'undefined' || !hasOnboarded) return; // 初回は welcome 経由
+      if (typeof tapCubeEnabled !== 'undefined' && !tapCubeEnabled) return;
+      const step = tutRestoreStep();
+      if (step > 0) startTutorial(step);
+    })();
+
+    onI18n(() => {
+      if (!window.__tut.active) return;
+      const st = tutStepDef();
+      if (st) tutSetCard(st.titleKey, st.bodyKey, {
+        nextKey: st.nextKey || (st.mode === 'card' ? 'tutNext' : null)
+      });
+    });
+    /* === タップキューブ チュートリアル ここまで ================== */
+
     settingsResetBtn.addEventListener('click', () => {
       buttonLayout = DEFAULT_LAYOUT.slice();
       selectedSlotIndex = null;
@@ -8625,6 +9412,14 @@
       clearHighlight();
       triggerHaptics(12);
       makeTurn(turn);
+      // チュートリアルへの通知。turn は {axis, layers:[layer], dir} で、
+      // どれもキューブのローカル座標系。視点をどれだけ回していても
+      // 「U を回した」「D を回した」の判定がぶれない。
+      if (window.__tut && window.__tut.active) {
+        window.dispatchEvent(new CustomEvent('cube-tap-turn', {
+          detail: { axis: turn.axis, layer: turn.layers[0], dir: turn.dir }
+        }));
+      }
       return true;
     }
 
@@ -8701,6 +9496,12 @@
           cubeGroup.quaternion.copy(endQuaternion);
           isSnapping = false;
           syncButtonColors();
+          // 「背景をなぞると全体が回る」を体験させるステップ用。
+          // 90°スナップが終わってから通知するので、途中の中途半端な
+          // 角度でガイドが次へ進んでしまうことがない。
+          if (window.__tut && window.__tut.active && Math.abs(snappedAngle) > 0.01) {
+            window.dispatchEvent(new Event('cube-view-rotated'));
+          }
         }
       }
       requestAnimationFrame(animateSnap);
@@ -8990,7 +9791,12 @@
     }
 
     makeTurn = function(move, instant = false) {
-      if (gameState === 'scrambled') {
+      // チュートリアル中の練習の1手でタイマーが走り出さないようにする。
+      // 走り出すと setMenuOpen(false)・サイズロック・シャッフルスライダーの
+      // muted 化まで芋づるで起きて、チュートリアルの誘導と真っ向からぶつかる。
+      // 通常は「そろった状態(idle)」で始めるのでここは通らないが、設定から
+      // 見直したときはキューブがバラバラ(scrambled)のこともあるため保険。
+      if (gameState === 'scrambled' && !(window.__tut && window.__tut.active && !window.__tut.scrambled)) {
         startTimer();
       }
       if (isAnimating && !instant) {
@@ -10731,6 +11537,9 @@ const ZBLL_DATA = [
       // events to notice the board changed. Tell it explicitly to rebuild
       // its guide from this fresh scramble.
       window.dispatchEvent(new Event('cube-reset'));
+      // cube-reset はリセット側からも飛ぶので、チュートリアルが
+      // 「シャッフルできた」を取り違えないよう専用のイベントを別に出す。
+      window.dispatchEvent(new Event('cube-scrambled'));
       gameState = 'scrambled';
       setShuffleSliderMode('scrambled');
       recordEligible = true; // a genuine scramble: this solve counts
@@ -11119,7 +11928,44 @@ const ZBLL_DATA = [
       resolveMove: resolveMove,
       isBusy: function () { return isAnimating || isSnapping; }
     };
+
+    /* チュートリアルのゴースト指を「実際のステッカーの上」に置くための橋渡し。
+       キューブのローカル座標 (x,y,z) を受け取り、いま画面のどこに写って
+       いるかを CSS ピクセルで返す。cubeGroup の回転も camera.setViewOffset
+       （ヘルプ表示中の寄せ）も projectionMatrix に入っているので、視点を
+       回してもヘルプを開いても、指は正しいマスに貼りついたままになる。 */
+    window.tutCubeBridge = {
+      screenPos: function (lx, ly, lz) {
+        try {
+          const v = new THREE.Vector3(lx, ly, lz);
+          cubeGroup.localToWorld(v);
+          v.project(camera);
+          const rect = renderer.domElement.getBoundingClientRect();
+          if (!rect.width || !rect.height) return null;
+          return {
+            x: rect.left + (v.x * 0.5 + 0.5) * rect.width,
+            y: rect.top + (-v.y * 0.5 + 0.5) * rect.height
+          };
+        } catch (err) { return null; }
+      },
+      // その面がいまカメラ側を向いているか。視点を回して対象の面が裏へ
+      // 回り込んだとき、ゴーストの指はキューブの手前に描かれてしまう
+      // （投影自体は成功するので座標では弾けない）。見えていない面を
+      // 指し続けるくらいなら、指を消したほうが誤解が少ない。
+      faceVisible: function (nx, ny, nz) {
+        try {
+          const q = cubeGroup.quaternion;
+          const n = new THREE.Vector3(nx, ny, nz).applyQuaternion(q);
+          const c = new THREE.Vector3(nx * 1.47, ny * 1.47, nz * 1.47).applyQuaternion(q);
+          const toCam = new THREE.Vector3(
+            camera.position.x - c.x, camera.position.y - c.y, camera.position.z - c.z);
+          return n.dot(toCam) > 0;
+        } catch (err) { return true; }
+      },
+      isBusy: function () { return isAnimating || isSnapping; }
+    };
     window.dispatchEvent(new Event('cube-help-ready'));
+    window.dispatchEvent(new Event('cube-tut-ready'));
 
     syncButtonColors();
     animate();
@@ -12104,6 +12950,8 @@ const ZBLL_DATA = [
       });
       btn.disabled = true;
     })();
+
+
 
     // A couple of rAFs let the browser actually paint the current frame
     // (the welcome overlay, or the header/controls) before the heavy,
