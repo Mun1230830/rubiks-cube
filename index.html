@@ -11297,32 +11297,73 @@ const ZBLL_DATA = [
       const _v2 = new THREE.Vector3();
 
       // 画面をなぞって届く向き 24 通り（ヨー/ピッチ 90°の組み合わせ）。
-      const ORIENTS = (function () {
-        const gens = [
-          new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1, 0, 0), Math.PI / 2),
-          new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1, 0, 0), -Math.PI / 2),
-          new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), Math.PI / 2),
-          new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), -Math.PI / 2)
-        ];
+      // 実機の操作は「1回のスワイプ＝上下または左右に90°」なので、どの向き
+      // からどの向きへも、必ずこの4種類の90°回転のどれかを何回か重ねた
+      // 経路として表せる。ORIENT_ADJ にその隣接関係（1スワイプ分の隣）を
+      // 一緒に作っておき、あとで「目的の向きまで1手ずつ」たどれるようにする。
+      const ORIENT_GENS = [
+        new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1, 0, 0), Math.PI / 2),
+        new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1, 0, 0), -Math.PI / 2),
+        new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), Math.PI / 2),
+        new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), -Math.PI / 2)
+      ];
+      const ORIENT_KEY = (function () {
         const m4 = new THREE.Matrix4();
-        const kf = (q) => {
+        return function (q) {
           m4.makeRotationFromQuaternion(q);
           return m4.elements.slice(0, 11).map((v) => Math.round(v)).join(',');
         };
+      })();
+      const ORIENT_INDEX = {};
+      const ORIENT_ADJ = [];
+      const ORIENTS = (function () {
         const list = [], seen = {}, queue = [];
         const q0 = new THREE.Quaternion();
-        seen[kf(q0)] = true; list.push(q0); queue.push(q0);
+        seen[ORIENT_KEY(q0)] = 0; list.push(q0); queue.push(q0);
         while (queue.length) {
           const cur = queue.shift();
-          for (const g of gens) {
+          const ci = seen[ORIENT_KEY(cur)];
+          ORIENT_ADJ[ci] = ORIENT_ADJ[ci] || [];
+          for (const g of ORIENT_GENS) {
             const n = cur.clone().premultiply(g);
-            const k = kf(n);
-            if (seen[k]) continue;
-            seen[k] = true; list.push(n); queue.push(n);
+            const k = ORIENT_KEY(n);
+            if (seen[k] === undefined) {
+              seen[k] = list.length;
+              list.push(n); queue.push(n);
+            }
+            ORIENT_ADJ[ci].push(seen[k]);
           }
         }
+        for (const k in seen) ORIENT_INDEX[k] = seen[k];
         return list;
       })();
+
+      // 最終目的地(toIndex)から見た、24方向それぞれまでの距離（何スワイプぶんか）。
+      function orientDistances(toIndex) {
+        const dist = new Array(ORIENTS.length).fill(-1);
+        dist[toIndex] = 0;
+        const queue = [toIndex];
+        while (queue.length) {
+          const cur = queue.shift();
+          for (const nb of ORIENT_ADJ[cur]) {
+            if (dist[nb] !== -1) continue;
+            dist[nb] = dist[cur] + 1;
+            queue.push(nb);
+          }
+        }
+        return dist;
+      }
+
+      // 今の向き(curQ)から、目的地まで最短でたどるときの「次の1スワイプ先」の
+      // 向きを返す。すでに目的地なら null。
+      function nextGripStep(curQ, dist) {
+        const ci = ORIENT_INDEX[ORIENT_KEY(curQ)];
+        if (ci === undefined || !dist || dist[ci] <= 0) return null;
+        for (const ni of ORIENT_ADJ[ci]) {
+          if (dist[ni] === dist[ci] - 1) return ORIENTS[ni];
+        }
+        return null;
+      }
 
       function letterUnderView(q, vec) {
         _v2.set(vec[0], vec[1], vec[2]).applyQuaternion(q);
@@ -11734,6 +11775,11 @@ const ZBLL_DATA = [
         st.mode = 'grip';
         st.gripTarget = target;
         st.gripReason = reason || 'back';
+        // 最終的な持ちかえ先までの距離表。ここから毎ループ、現在の向きに
+        // 一番近い「次の1スワイプ」だけを取り出して見せる（2手を一気に
+        // 見せない）。
+        const targetIndex = ORIENT_INDEX[ORIENT_KEY(target)];
+        st.gripDist = targetIndex === undefined ? null : orientDistances(targetIndex);
         moveBadgeEl.classList.remove('done', 'celebrate');
         panel.classList.remove('celebrate');
         phaseEl.classList.remove('celebrate-text');
@@ -11755,7 +11801,8 @@ const ZBLL_DATA = [
           }
         } else {
           moveDescEl.textContent = t('gripBackDesc');
-          setNote(gripText(target), 'info');
+          // 具体的な向き（右に90°、など）は gripLoop 側で、今の向きから見て
+          // 次の1スワイプぶんだけを毎回計算して表示する。
         }
         syncDemo();
         measurePanel();
@@ -11765,7 +11812,11 @@ const ZBLL_DATA = [
       function gripLoop() {
         if (!st.on || st.mode !== 'grip' || !demo || !st.gripTarget) return;
         const from = cubeHelpBridge.cubeGroup.quaternion.clone();
-        const to = st.gripTarget;
+        // 最終目的地までが2スワイプ以上離れていても、見せる／案内するのは
+        // 常に次の1スワイプ（90°）ぶんだけ。今の向きが動くたびにここで
+        // 再計算するので、1手やり終えたら自動で次の1手の案内に切り替わる。
+        const to = nextGripStep(from, st.gripDist) || st.gripTarget;
+        if (st.gripReason !== 'cross') setNote(gripText(to), 'info');
         demo.token++;
         const token = demo.token;
         demo.viewAnim = true;
