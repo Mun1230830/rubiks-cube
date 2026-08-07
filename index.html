@@ -764,7 +764,9 @@
       top: 50%;
       left: 50%;
       transform: translate(-50%, -50%) scale(0.7);
-      background: rgba(0, 0, 0, 0.85);
+      /* 背面のテキストが透けて重なって見える不具合の修正:
+         半透明(rgba)だった背景を完全不透明な単色に変更。 */
+      background: #08080b;
       border: 2px solid #00ffcc;
       color: #00ffcc;
       padding: 16px 24px;
@@ -798,7 +800,10 @@
       display: none;
       position: fixed;
       inset: 0;
-      background: rgba(0, 0, 0, 0.75);
+      /* チュートリアル等のダイアログ背面のテキストが透けて重なって見える
+         不具合の修正: 半透明(rgba)だった背景を完全不透明な単色に変更。
+         背面の要素と合成されないため、透け・重なりが起こらなくなる。 */
+      background: #08080b;
       z-index: 30;
       align-items: center;
       justify-content: center;
@@ -807,7 +812,8 @@
       display: none;
       position: fixed;
       inset: 0;
-      background: rgba(0, 0, 0, 0.8);
+      /* 背面が透けないよう完全不透明の背景に変更 */
+      background: #08080b;
       z-index: 31;
       align-items: center;
       justify-content: center;
@@ -1110,7 +1116,8 @@
       display: none;
       position: fixed;
       inset: 0;
-      background: rgba(0, 0, 0, 0.75);
+      /* 背面が透けないよう完全不透明の背景に変更 */
+      background: #08080b;
       z-index: 30;
       align-items: center;
       justify-content: center;
@@ -1233,7 +1240,8 @@
       display: none;
       position: fixed;
       inset: 0;
-      background: rgba(0, 0, 0, 0.75);
+      /* 背面が透けないよう完全不透明の背景に変更 */
+      background: #08080b;
       z-index: 31;
       align-items: center;
       justify-content: center;
@@ -2116,7 +2124,8 @@
       display: none;
       position: fixed;
       inset: 0;
-      background: rgba(0, 0, 0, 0.8);
+      /* 背面が透けないよう完全不透明の背景に変更 */
+      background: #08080b;
       z-index: 30;
       align-items: center;
       justify-content: center;
@@ -2292,7 +2301,8 @@
       display: none;
       position: fixed;
       inset: 0;
-      background: rgba(0, 0, 0, 0.8);
+      /* 背面が透けないよう完全不透明の背景に変更 */
+      background: #08080b;
       z-index: 30;
       align-items: center;
       justify-content: center;
@@ -2462,7 +2472,8 @@
       display: none;
       position: fixed;
       inset: 0;
-      background: rgba(0, 0, 0, 0.8);
+      /* 背面が透けないよう完全不透明の背景に変更 */
+      background: #08080b;
       z-index: 30;
       align-items: center;
       justify-content: center;
@@ -2703,7 +2714,9 @@
       position: fixed;
       inset: 0;
       z-index: 80;
-      background: rgba(6, 6, 8, 0.72);
+      /* 背面のテキストが透けて重なって見える不具合の修正:
+         半透明(rgba)だった背景を完全不透明な単色に変更。 */
+      background: #08080b;
       -webkit-backdrop-filter: blur(3px);
       backdrop-filter: blur(3px);
       align-items: center;
@@ -3326,7 +3339,9 @@
       z-index: 999999;
       align-items: center;
       justify-content: center;
-      background: rgba(8, 8, 12, 0.74);
+      /* 背面のテキストが透けて重なって見える不具合の修正:
+         半透明(rgba)だった背景を完全不透明な単色に変更。 */
+      background: #08080c;
       -webkit-backdrop-filter: blur(16px) saturate(140%);
       backdrop-filter: blur(16px) saturate(140%);
       padding: 24px calc(24px + env(safe-area-inset-right)) 24px calc(24px + env(safe-area-inset-left));
@@ -4211,6 +4226,28 @@
 #tut-body b { color: #fff; }
 #tut-body .tut-em { color: #00ffcc; font-weight: 800; }
 
+/* いま画面のどこを、どちらへなぞればよいか。ここだけは説明文と切り離し、
+   毎フレーム「見たまま」に描き替える。キューブを持ち替えたとたんに
+   「手前の面の上の段」が別の場所を指してしまう事故を、文言の側でも防ぐ。 */
+#tut-guide {
+  display: none;
+  margin: 8px 0 0;
+  padding: 7px 10px;
+  border-radius: 10px;
+  background: rgba(0, 255, 204, 0.09);
+  border: 1px solid rgba(0, 255, 204, 0.28);
+  font-size: 13px;
+  line-height: 1.5;
+  color: #dff;
+}
+#tut-guide.on { display: block; }
+#tut-guide .tut-em { color: #00ffcc; font-weight: 800; }
+
+/* 設定・記録・言語などの画面が前に出ている間は、ガイドをまるごと隠す。
+   #tut-root は z-index:4000 でそれらより手前にあるため、隠さないと
+   説明カードとスポットライトが設定画面の上に居座ってしまう。 */
+#tut-root.tut-hidden { opacity: 0; visibility: hidden; }
+
 /* 「あと何回」のドット。4回まわす体験の進み具合をここで見せる。 */
 #tut-dots {
   display: none;
@@ -4826,6 +4863,7 @@
       <p class="tut-step-label" id="tut-step-label"></p>
       <h3 id="tut-title"></h3>
       <p id="tut-body"></p>
+      <p id="tut-guide" aria-live="polite"></p>
       <div id="tut-dots" aria-hidden="true"></div>
       <div id="tut-actions">
         <button type="button" id="tut-skip"></button>
@@ -5267,17 +5305,35 @@
                 "tutStart": "はじめる",
                 "tutDone": "はじめる 🎉",
                 "tutStep": "ステップ {n} / 4",
-                "tutStepIntro": "ようこそ",
+                "tutStepIntro": "Virtual Cube Challenge",
 
                 "tutIntroTitle": "ようこそ！",
-                "tutIntroBody": "まずは<b>30秒だけ</b>、指の使い方をいっしょに確認しましょう。<br>とちゅうでやめても、⚙️設定 からいつでもやり直せます。",
+                "tutIntroBody": "まずは指の使い方をいっしょに確認しましょう。<br>途中でやめても「⚙️設定」からやり直せます。",
 
                 "tutTurnTitle": "指でなぞって回そう",
-                "tutTurnU": "手前の面の<span class=\"tut-em\">いちばん上の段</span>を、<b>横になぞって</b>みて。<br>ボタンはいりません。キューブを直接さわるだけ！",
-                "tutTurnR": "つぎは手前の面の<span class=\"tut-em\">いちばん右の列</span>を、<b>たてになぞって</b>みよう。",
-                "tutTurnF": "こんどは<span class=\"tut-em\">上の面</span>の<span class=\"tut-em\">手前の段</span>を、<b>横になぞって</b>みよう。",
-                "tutTurnL": "手前の面の<span class=\"tut-em\">いちばん左の列</span>を、<b>たてに</b>。もうコツはつかめたはず！",
-                "tutTurnD": "最後は手前の面の<span class=\"tut-em\">いちばん下の段</span>を、<b>横に</b>。",
+                "tutTurnU": "キューブの上の<span class=\"tut-em\">緑ライン</span>を、指でなぞってみよう！<br>ボタン操作は不要です。キューブを直接さわるだけで回せます。",
+                "tutTurnR": "つぎはここ。同じように <span class=\"tut-em\">👆</span> のとおりなぞるだけです。",
+                "tutTurnF": "こんどは別の面を使います。<span class=\"tut-em\">👆</span> が出ているところをなぞってみよう。",
+                "tutTurnL": "反対がわも同じやり方。もうコツはつかめたはず！",
+                "tutTurnD": "これで最後。ゆっくりで大丈夫です。",
+                "tutGuide": "👆 {face}の<span class=\"tut-em\">{where}</span>を{how}なぞる",
+                "tutFaceFront": "手前の面",
+                "tutFaceTop": "上の面",
+                "tutFaceBottom": "下の面",
+                "tutFaceLeft": "左の面",
+                "tutFaceRight": "右の面",
+                "tutFaceAny": "見えている面",
+                "tutRowNear": "手前の段",
+                "tutRowFar": "奥の段",
+                "tutGuideWait": "キューブが見えるところまで、背景をなぞって向きを戻してみて。",
+                "tutRowTop": "いちばん上の段",
+                "tutRowMid": "まん中の段",
+                "tutRowBottom": "いちばん下の段",
+                "tutColLeft": "いちばん左の列",
+                "tutColMid": "まん中の列",
+                "tutColRight": "いちばん右の列",
+                "tutSwipeH": "横に",
+                "tutSwipeV": "たてに",
                 "tutTurnGo": "同じ向きに、あと{n}回！",
                 "tutTurnLoopFirst": "🎉 <b>ぐるっと1周！</b><br>同じところを4回まわすと、ちゃんと<b>元どおりに戻ります</b>。だから、まちがえても大丈夫。",
                 "tutTurnLoop": "🎉 また元どおり！ 4回で1周、が合いことばです。",
@@ -5495,11 +5551,29 @@
                 "tutIntroBody": "Let's spend <b>30 seconds</b> getting your finger used to the cube.<br>You can stop anytime and start over from ⚙️ Settings.",
 
                 "tutTurnTitle": "Swipe to turn",
-                "tutTurnU": "Swipe <b>sideways</b> across the <span class=\"tut-em\">top row</span> of the face in front of you.<br>No buttons needed — just touch the cube.",
-                "tutTurnR": "Now swipe <b>up or down</b> along the <span class=\"tut-em\">rightmost column</span> of the front face.",
-                "tutTurnF": "This time swipe <b>sideways</b> across the <span class=\"tut-em\">front row of the top face</span>.",
-                "tutTurnL": "Swipe <b>up or down</b> along the <span class=\"tut-em\">leftmost column</span>. You've got this!",
-                "tutTurnD": "Last one — swipe <b>sideways</b> across the <span class=\"tut-em\">bottom row</span> of the front face.",
+                "tutTurnU": "Trace the <span class=\"tut-em\">👆 path</span> shown on the cube with your finger.<br>No buttons needed — just touch the cube.",
+                "tutTurnR": "Now this one. Same idea — just follow the <span class=\"tut-em\">👆</span>.",
+                "tutTurnF": "This time a different face is in play. Follow the <span class=\"tut-em\">👆</span>.",
+                "tutTurnL": "The opposite side works exactly the same. You've got this!",
+                "tutTurnD": "Last one. Take your time.",
+                "tutGuide": "👆 On {face}, swipe the <span class=\"tut-em\">{where}</span> {how}",
+                "tutFaceFront": "the face in front of you",
+                "tutFaceTop": "the top face",
+                "tutFaceBottom": "the bottom face",
+                "tutFaceLeft": "the left face",
+                "tutFaceRight": "the right face",
+                "tutFaceAny": "the face you can see",
+                "tutRowNear": "front row",
+                "tutRowFar": "back row",
+                "tutGuideWait": "Swipe the background to bring the cube back into view.",
+                "tutRowTop": "top row",
+                "tutRowMid": "middle row",
+                "tutRowBottom": "bottom row",
+                "tutColLeft": "left column",
+                "tutColMid": "middle column",
+                "tutColRight": "right column",
+                "tutSwipeH": "sideways",
+                "tutSwipeV": "up or down",
                 "tutTurnGo": "Same direction, {n} more to go!",
                 "tutTurnLoopFirst": "🎉 <b>Full circle!</b><br>Turn the same layer four times and it comes <b>right back to where it started</b>. So you can't break anything.",
                 "tutTurnLoop": "🎉 Back to the start again! Four turns is always one full circle.",
@@ -8679,6 +8753,7 @@
     const tutLabel  = document.getElementById('tut-step-label');
     const tutTitle  = document.getElementById('tut-title');
     const tutBody   = document.getElementById('tut-body');
+    const tutGuide  = document.getElementById('tut-guide');
     const tutDots   = document.getElementById('tut-dots');
     const tutSkip   = document.getElementById('tut-skip');
     const tutNext   = document.getElementById('tut-next');
@@ -8706,21 +8781,20 @@
       { id: 'intro', phase: 0, mode: 'card',
         titleKey: 'tutIntroTitle', bodyKey: 'tutIntroBody', nextKey: 'tutStart' },
 
-      { id: 'U', phase: 1, mode: 'turn', axis: 'y', layer: 1,
-        titleKey: 'tutTurnTitle', bodyKey: 'tutTurnU',
-        normal: [0, 0, 1], from: [-1, 1, TUT_FACE], to: [1, 1, TUT_FACE] },
-      { id: 'R', phase: 1, mode: 'turn', axis: 'x', layer: 1,
-        titleKey: 'tutTurnTitle', bodyKey: 'tutTurnR',
-        normal: [0, 0, 1], from: [1, -1, TUT_FACE], to: [1, 1, TUT_FACE] },
-      { id: 'F', phase: 1, mode: 'turn', axis: 'z', layer: 1,
-        titleKey: 'tutTurnTitle', bodyKey: 'tutTurnF',
-        normal: [0, 1, 0], from: [-1, TUT_FACE, 1], to: [1, TUT_FACE, 1] },
-      { id: 'L', phase: 1, mode: 'turn', axis: 'x', layer: -1,
-        titleKey: 'tutTurnTitle', bodyKey: 'tutTurnL',
-        normal: [0, 0, 1], from: [-1, -1, TUT_FACE], to: [-1, 1, TUT_FACE] },
-      { id: 'D', phase: 1, mode: 'turn', axis: 'y', layer: -1,
-        titleKey: 'tutTurnTitle', bodyKey: 'tutTurnD',
-        normal: [0, 0, 1], from: [-1, -1, TUT_FACE], to: [1, -1, TUT_FACE] },
+      // from/to は書かない。どの面のどの筋をなぞらせるかは、そのときに
+      // 前を向いている面から毎フレーム計算する(tutTurnGeom)。dir は
+      // 「まだ一度も回していないときに、どちら向きを勧めるか」の初期値で、
+      // 既定の視点では従来と同じ道すじになる値を入れてある。
+      { id: 'U', phase: 1, mode: 'turn', axis: 'y', layer: 1, dir: 1,
+        titleKey: 'tutTurnTitle', bodyKey: 'tutTurnU' },
+      { id: 'R', phase: 1, mode: 'turn', axis: 'x', layer: 1, dir: -1,
+        titleKey: 'tutTurnTitle', bodyKey: 'tutTurnR' },
+      { id: 'F', phase: 1, mode: 'turn', axis: 'z', layer: 1, dir: -1,
+        titleKey: 'tutTurnTitle', bodyKey: 'tutTurnF' },
+      { id: 'L', phase: 1, mode: 'turn', axis: 'x', layer: -1, dir: -1,
+        titleKey: 'tutTurnTitle', bodyKey: 'tutTurnL' },
+      { id: 'D', phase: 1, mode: 'turn', axis: 'y', layer: -1, dir: 1,
+        titleKey: 'tutTurnTitle', bodyKey: 'tutTurnD' },
       { id: 'view', phase: 1, mode: 'view',
         titleKey: 'tutViewTitle', bodyKey: 'tutViewBody' },
 
@@ -8745,8 +8819,74 @@
     let tutMenuObserver = null;
     let tutArmObserver = null;
     let tutLoopSeen = false;   // 「4回で戻る」の説明は最初の1回だけ手厚く
+    let tutFace = null;        // いま案内に使っている面のローカル法線
+    let tutGuideKey = null;    // 直前に描いたガイド文（同じなら描き替えない）
 
     function tutStepDef() { return TUT_STEPS[tutIndex] || null; }
+
+    /* チュートリアルをひっこめるべき画面たち。
+       #tut-root は z-index:4000 で、設定(30)や記録(30)、言語(60)といった
+       画面よりも手前にいる。隔てないと、ドロワーから設定を開いたとたんに
+       説明カードとスポットライトが設定画面の上に居座り、進むことも戻ることも
+       できない見た目になる。開いているあいだだけ隠し、閉じたらそのまま続きから。 */
+    const TUT_BLOCKERS = [
+      '#settings-overlay', '#layout-overlay', '#records-overlay', '#stats-overlay',
+      '#oll-overlay', '#pll-overlay', '#zbll-overlay', '#confirm-overlay',
+      '#lang-overlay', '#welcome-overlay', '#orientation-overlay'
+    ];
+    function tutOverlayOpen() {
+      for (let i = 0; i < TUT_BLOCKERS.length; i++) {
+        const el = document.querySelector(TUT_BLOCKERS[i]);
+        if (el && el.getClientRects().length) return true;
+      }
+      return false;
+    }
+
+    /* --- 「いまどこを、どちらへなぞるか」の再計算 ----------------------
+       回す対象の段(axis/layer)はキューブのローカル座標で固定だが、
+       それを「画面のどこで、どちらへ」なぞればよいかは見る向きで変わる。
+       固定の from/to を持っていると、途中でキューブを持ち替えたとたんに
+       持ち替え前の場所・向きを指しつづけることになるので、毎フレーム引き直す。
+
+       逆算の根拠: resolveGrabTurn() は 回転軸 = 面の法線 × 指の進む向き。
+       法線 n と回したい軸 a （n ⊥ a）が決まれば、
+         e = dir * (a × n)   →   n × e = dir * a
+       なので、この e が「その面の上で指を進めるべき向き」になる。 */
+    function tutTurnGeom(st) {
+      const br = window.tutCubeBridge;
+      if (!br || typeof br.bestFaceForAxis !== 'function') return null;
+      const n = br.bestFaceForAxis(st.axis, tutFace);
+      if (!n) { tutFace = null; return null; }
+      tutFace = n;
+      const a = [st.axis === 'x' ? 1 : 0, st.axis === 'y' ? 1 : 0, st.axis === 'z' ? 1 : 0];
+      // すでに何回か回しているなら、その向きをそのまま引き継ぐ。
+      // 4回連続でないと一周しないのに、途中で逆向きを案内しては逆効果。
+      const d = (tutTurnDir !== null ? tutTurnDir : (st.dir || 1));
+      const e = [
+        d * (a[1] * n[2] - a[2] * n[1]),
+        d * (a[2] * n[0] - a[0] * n[2]),
+        d * (a[0] * n[1] - a[1] * n[0])
+      ];
+      const c = [
+        n[0] * TUT_FACE + a[0] * st.layer,
+        n[1] * TUT_FACE + a[1] * st.layer,
+        n[2] * TUT_FACE + a[2] * st.layer
+      ];
+      return {
+        n: n,
+        from: [c[0] - e[0], c[1] - e[1], c[2] - e[2]],
+        to:   [c[0] + e[0], c[1] + e[1], c[2] + e[2]],
+        mid:  c,
+        face: [n[0] * TUT_FACE, n[1] * TUT_FACE, n[2] * TUT_FACE]
+      };
+    }
+
+    function tutSetGuide(html) {
+      if (tutGuideKey === html) return;
+      tutGuideKey = html;
+      tutGuide.innerHTML = html || '';
+      tutGuide.classList.toggle('on', !!html);
+    }
 
     function shouldRunTutorial() {
       // 「指でなぞる」を選んだ人のためのチュートリアルなので、
@@ -8788,6 +8928,17 @@
       const st = tutStepDef();
       if (!st) return;
 
+      // 設定や記録などが前に出ているあいだは、一切描かない。
+      // 進行状態はそのままなので、閉じれば続きから再開される。
+      if (tutOverlayOpen()) {
+        tutRoot.classList.add('tut-hidden');
+        tutRAF = requestAnimationFrame(tutTick);
+        return;
+      }
+      tutRoot.classList.remove('tut-hidden');
+
+      if (st.mode !== 'turn') tutSetGuide('');
+
       if (st.target) {
         const el = document.querySelector(st.target);
         if (el && el.getClientRects().length) {
@@ -8808,17 +8959,13 @@
         }
       }
 
-      if (st.from && window.tutCubeBridge) {
+      if (st.mode === 'turn' && window.tutCubeBridge) {
         const br = window.tutCubeBridge;
-        const facing = !st.normal || !br.faceVisible ||
-          br.faceVisible(st.normal[0], st.normal[1], st.normal[2]);
-        if (!facing) {
-          tutRoot.classList.remove('has-ghost');
-          tutRAF = requestAnimationFrame(tutTick);
-          return;
-        }
-        const a = window.tutCubeBridge.screenPos(st.from[0], st.from[1], st.from[2]);
-        const b = window.tutCubeBridge.screenPos(st.to[0], st.to[1], st.to[2]);
+        const g = tutTurnGeom(st);
+        const a = g && br.screenPos(g.from[0], g.from[1], g.from[2]);
+        const b = g && br.screenPos(g.to[0], g.to[1], g.to[2]);
+        const m = g && br.screenPos(g.mid[0], g.mid[1], g.mid[2]);
+        const f = g && br.screenPos(g.face[0], g.face[1], g.face[2]);
         // 3D の準備前や、視点の都合で対象の面が画面外へ回り込んだときは、
         // 投影結果が画面外の値になる。そのまま描くと、キューブとは無関係な
         // 場所を指す指と線が出て「そこを触るのか？」と誤解させるので、
@@ -8827,7 +8974,7 @@
           p.x > -40 && p.x < window.innerWidth + 40 &&
           p.y > -40 && p.y < window.innerHeight + 40;
         const span = (a && b) ? Math.hypot(b.x - a.x, b.y - a.y) : Infinity;
-        if (sane(a) && sane(b) && span > 12 &&
+        if (sane(a) && sane(b) && m && f && span > 12 &&
             span < Math.hypot(window.innerWidth, window.innerHeight) * 0.6) {
           tutRoot.style.setProperty('--gx', a.x + 'px');
           tutRoot.style.setProperty('--gy', a.y + 'px');
@@ -8839,8 +8986,50 @@
           tutTrail.style.width = Math.hypot(dx, dy) + 'px';
           tutTrail.style.transform = 'rotate(' + Math.atan2(dy, dx) + 'rad)';
           tutRoot.classList.add('has-ghost');
+
+          // 文言も見たままに。どの面かは「いま一番こちらを向いている面」を
+          // 基準にし、それ自身なら「手前の面」、違うなら画面上でキューブの
+          // 中心からどちらにずれているかで上下左右を決める。
+          let faceKey = 'tutFaceFront';
+          const front = typeof br.bestFaceForAxis === 'function' ? br.bestFaceForAxis(null, null) : null;
+          const sameFace = front && g.n &&
+            front[0] === g.n[0] && front[1] === g.n[1] && front[2] === g.n[2];
+          if (front && !sameFace) {
+            const o = br.screenPos(0, 0, 0);
+            if (!o) {
+              faceKey = 'tutFaceAny';
+            } else if (Math.abs(f.y - o.y) >= Math.abs(f.x - o.x)) {
+              faceKey = (f.y < o.y) ? 'tutFaceTop' : 'tutFaceBottom';
+            } else {
+              faceKey = (f.x < o.x) ? 'tutFaceLeft' : 'tutFaceRight';
+            }
+          }
+
+          // 画面上で横に伸びていれば「段」を横に、たてに伸びていれば
+          // 「列」をたてに。上下左右は、その筋の中心が面の中心から
+          // 画面のどちらにずれているかで決める。天面・底面を使うときだけは
+          // 上下ではなく「手前・奥」と呼ぶ（そのほうが見た目と一致する）。
+          const horiz = Math.abs(dx) >= Math.abs(dy);
+          const off = horiz ? (m.y - f.y) : (m.x - f.x);
+          const thr = span * 0.18;
+          const flat = (faceKey === 'tutFaceTop' || faceKey === 'tutFaceBottom');
+          let whereKey;
+          if (horiz) {
+            whereKey = Math.abs(off) < thr ? 'tutRowMid'
+              : flat ? (off > 0 ? 'tutRowNear' : 'tutRowFar')
+                     : (off < 0 ? 'tutRowTop' : 'tutRowBottom');
+          } else {
+            whereKey = Math.abs(off) < thr ? 'tutColMid' : (off < 0 ? 'tutColLeft' : 'tutColRight');
+          }
+          tutSetGuide(t('tutGuide', {
+            face: t(faceKey),
+            where: t(whereKey),
+            how: t(horiz ? 'tutSwipeH' : 'tutSwipeV')
+          }));
         } else {
           tutRoot.classList.remove('has-ghost');
+          // キューブが見えない場所にあるときだけ、戻し方を添える。
+          tutSetGuide(g ? t('tutGuideWait') : '');
         }
       }
 
@@ -8900,6 +9089,8 @@
       const st = tutStepDef();
       tutTurnCount = 0;
       tutTurnDir = null;
+      tutFace = null;
+      tutSetGuide('');
       window.__tut.holdMenu = !!st.holdMenu;
 
       // レイヤーの出し分け。キューブを触らせるステップでは幕を張らない
@@ -8910,7 +9101,7 @@
         tutRoot.classList.remove('has-hole');
         tutRoot.classList.remove('card-top');
       }
-      if (!st.from) {
+      if (st.mode !== 'turn') {
         tutRoot.classList.remove('has-ghost');
       }
 
@@ -8933,6 +9124,10 @@
       // ステップ固有の待ち受け
       if (st.mode === 'menu') {
         const ma = document.getElementById('menu-actions');
+        // このステップに入る前に自分で開いていた場合。開いたままだと
+        // MutationObserver は一生鳴らず、リングだけ光って先へ進めなくなる。
+        // いったん閉じて、「開く」を本人の手でやってもらう。
+        if (ma.classList.contains('open') && typeof setMenuOpen === 'function') setMenuOpen(false);
         tutMenuObserver = new MutationObserver(() => {
           if (ma.classList.contains('open')) tutAdvance();
         });
@@ -9024,13 +9219,24 @@
 
     /* --- 開始・終了 -------------------------------------------------------- */
     function startTutorial(fromStep) {
+      // すでに走っている最中に呼ばれても壊れないよう、まず全部たたむ。
+      // 設定の「遊び方をもう一度見る」や「回し方をえらび直す」は、
+      // チュートリアル表示中でもドロワー経由で押せてしまうため。
+      tutTeardownWatchers();
+      if (tutRAF) { cancelAnimationFrame(tutRAF); tutRAF = null; }
+      tutRoot.classList.remove('spotlight', 'has-hole', 'has-ghost', 'card-top', 'tut-hidden');
+      tutIndex = -1;
+      tutFace = null;
+      tutGuideKey = null;
+      const step = (typeof fromStep === 'number' && fromStep > 0) ? fromStep : 0;
       window.__tut.active = true;
-      window.__tut.scrambled = false;
+      window.__tut.holdMenu = false;
+      if (step === 0) window.__tut.scrambled = false;
       tutLoopSeen = false;
+      if (typeof setMenuOpen === 'function') setMenuOpen(false);
       tutRoot.classList.add('show');
-      if (tutRAF) cancelAnimationFrame(tutRAF);
+      tutGoTo(step);
       tutRAF = requestAnimationFrame(tutTick);
-      tutGoTo(typeof fromStep === 'number' ? fromStep : 0);
     }
 
     function finishTutorial(completed) {
@@ -9039,7 +9245,9 @@
       window.__tut.holdMenu = false;
       tutIndex = -1;
       if (tutRAF) { cancelAnimationFrame(tutRAF); tutRAF = null; }
-      tutRoot.classList.remove('show', 'spotlight', 'has-hole', 'has-ghost', 'card-top');
+      tutFace = null;
+      tutSetGuide('');
+      tutRoot.classList.remove('show', 'spotlight', 'has-hole', 'has-ghost', 'card-top', 'tut-hidden');
       if (typeof setMenuOpen === 'function') setMenuOpen(false);
       tutSaveProgress(true);
       // シャッフルまで到達せずに抜けた場合は、ここで混ぜて通常の
@@ -9078,6 +9286,7 @@
 
     onI18n(() => {
       if (!window.__tut.active) return;
+      tutGuideKey = null;   // ガイド文も新しい言語で描き直す
       const st = tutStepDef();
       if (st) tutSetCard(st.titleKey, st.bodyKey, {
         nextKey: st.nextKey || (st.mode === 'card' ? 'tutNext' : null)
@@ -11961,6 +12170,45 @@ const ZBLL_DATA = [
             camera.position.x - c.x, camera.position.y - c.y, camera.position.z - c.z);
           return n.dot(toCam) > 0;
         } catch (err) { return true; }
+      },
+      // 指定した軸の段を回すのに使える面（= その軸に垂直な4面）のうち、
+      // いまいちばんこちらを向いているものを返す。チュートリアルの
+      // 「ここをなぞって」を、持ち替え後の見た目に合わせるためのもの。
+      // prev を渡すと、差がわずかなうちは前回の面を保つ（ちょうど 45° の
+      // ときに案内が左右の面を行ったり来たりちらつかないように）。
+      // axisName に null を渡すと、6面の中で一番こちらを向いている面を返す
+      // （「手前の面」がどれなのかを決めるのに使う）。
+      bestFaceForAxis: function (axisName, prev) {
+        try {
+          const q = cubeGroup.quaternion;
+          const score = (v) => {
+            const n = v.clone().applyQuaternion(q);
+            const c = v.clone().multiplyScalar(1.47).applyQuaternion(q);
+            const toCam = new THREE.Vector3(
+              camera.position.x - c.x, camera.position.y - c.y, camera.position.z - c.z);
+            const len = toCam.length();
+            return len < 1e-6 ? -1 : n.dot(toCam) / len;
+          };
+          let best = null, bestScore = -Infinity;
+          ['x', 'y', 'z'].forEach((nm) => {
+            if (nm === axisName) return;      // その面ではその軸の段を回せない
+            [1, -1].forEach((s) => {
+              const v = new THREE.Vector3();
+              v[nm] = s;
+              const sc = score(v);
+              if (sc > bestScore) { bestScore = sc; best = v; }
+            });
+          });
+          if (!best || bestScore < 0.12) return null;   // 真横からの面には案内しない
+          if (axisName && prev && prev.length === 3 &&
+              prev[axisName === 'x' ? 0 : axisName === 'y' ? 1 : 2] === 0) {
+            const pv = new THREE.Vector3(prev[0], prev[1], prev[2]);
+            if (pv.lengthSq() > 0.5 && score(pv) > bestScore - 0.12) {
+              return [pv.x, pv.y, pv.z];
+            }
+          }
+          return [best.x, best.y, best.z];
+        } catch (err) { return null; }
       },
       isBusy: function () { return isAnimating || isSnapping; }
     };
