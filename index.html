@@ -3650,9 +3650,7 @@
   transform-origin: 0 50%;
   background: linear-gradient(90deg, rgba(140,238,255,.85), rgba(95,227,255,0));
   opacity: 0;
-  /* will-change は外した。親の .crystal-shard が既に合成レイヤーなので、
-     残光まで個別レイヤーに昇格させると 13個 × 2枚ぶんの GPU メモリを
-     食うだけで、描画は速くならない。 */
+  will-change: transform, opacity;
 }
 .crystal-shard-glow {
   position: absolute;
@@ -3668,11 +3666,7 @@
   display: grid;
   place-items: center;
   animation: crystal-tumble .8s linear infinite;
-  /* transform-style:preserve-3d は外した。中身は平らな SVG 1枚だけなので
-     3D レンダリングコンテキストを作る意味がなく、回転のたびに子要素を
-     3D 空間で解決し直すぶんだけ重くなっていた。rotate3d 自体は
-     preserve-3d 無しでも同じ見た目で回る。 */
-  will-change: transform;
+  transform-style: preserve-3d;
 }
 @keyframes crystal-tumble {
   0%   { transform: rotate3d(.4, 1, .2, 0deg); }
@@ -3691,10 +3685,7 @@
   width: 100%;
   height: 100%;
   display: block;
-  /* ★ここが一番重かった。filter は「合成だけで済ませる」道を塞ぐので、
-     回転しながら飛ぶ 13個ぶんが毎フレーム再ラスタライズされていた。
-     光り方は背面の .crystal-shard-glow (ただの radial-gradient) が
-     受け持っているので、見た目はほぼ変わらないまま負荷だけ落ちる。 */
+  filter: drop-shadow(0 0 5px rgba(95,227,255,.55));
 }
 /* 絵文字モード（CrystalReward.setIconFactory 未使用でも切替できる簡易版） */
 .crystal-gem-emoji {
@@ -3827,24 +3818,13 @@
   isolation:isolate;                /* ::before/::after を内側に閉じ込める */
   transform:translateZ(0);
   will-change:transform;
-  /* ★ transition:min-width は効いていなかった（min-width は固定値のまま
-     で、実際に伸び縮みしていたのは width:max-content 側）。それどころか
-     カウントアップ中は数字が毎フレーム書き換わるため、このピルの幅も
-     毎フレーム変わり、#header (display:flex / flex-wrap:wrap) がまるごと
-     組み直しになっていた。幅は JS が最終値ぶんを先に確保するので、
-     ここでは何も遷移させない。 */
+  transition:min-width .18s ease; /* 桁数変化でも滑らかに幅が追従 */
 }
 .wallet-pill .pill-icon{ width:15px; height:19px; display:block; flex:0 0 auto; }
 .wallet-pill .pill-num{
   font-family:"Orbitron", ui-monospace, "SF Mono", monospace;
   font-size:15px; font-weight:900; line-height:1;
   letter-spacing:.04em; font-variant-numeric:tabular-nums;
-  /* 桁数が増えても箱の幅が変わらないようにする。tabular-nums と併せて、
-     0 → 100 と数字が流れてもレイアウトはぴくりとも動かない。
-     実際に必要な幅は JS (reserveCounterWidth) が ch 単位で入れ直す。 */
-  display:inline-block;
-  min-width:3ch;
-  text-align:right;
 }
 
 /* ---- 下段：水色（静かな単色グロー）---- */
@@ -3949,21 +3929,19 @@
 #jackpot-fx.is-dim .jp-dim{ opacity:1; }
 #jackpot-fx.is-out .jp-dim{ opacity:0; transition:opacity .5s ease-in; }
 
-/* --- タメ中に中心へ吸い寄せられる集中線リング ---
-   border-color をアニメさせると 520px の円を毎フレーム塗り直すことになる。
-   色は固定して、動かすのは transform と opacity だけ（＝合成だけで済む）。 */
+/* --- タメ中に中心へ吸い寄せられる集中線リング --- */
 .jp-charge{
   position:absolute; left:50%; top:46%;
   width:520px; height:520px; margin:-260px 0 0 -260px;
   border-radius:50%;
-  border:2px solid rgba(255,235,180,.9);
+  border:2px solid rgba(255,225,150,.0);
   opacity:0;
 }
 #jackpot-fx.is-dim .jp-charge{ animation:jp-charge .3s cubic-bezier(.5,0,.9,.6) 2; }
 @keyframes jp-charge{
-  0%{ transform:scale(1);   opacity:0 }
-  35%{                      opacity:.9 }
-  100%{ transform:scale(.06); opacity:0 }
+  0%{ transform:scale(1); opacity:0; border-color:rgba(255,225,150,0) }
+  35%{ opacity:.9; border-color:rgba(255,225,150,.85) }
+  100%{ transform:scale(.06); opacity:0; border-color:rgba(255,255,255,1) }
 }
 
 /* --- 画面全体の白フラッシュ --- */
@@ -3975,25 +3953,17 @@
   0%{ opacity:0 } 6%{ opacity:1 } 30%{ opacity:.55 } 100%{ opacity:0 }
 }
 
-/* --- 背後で回る虹色の後光 ---
-   180vmax は「回しても隅が欠けない」ための余裕だったが、実際に必要なのは
-   ビューポート対角線ぶん (≒1.42vmax)。150vmax に落とすだけで塗る面積が
-   3割減る。さらに will-change で1枚のレイヤーに固定しておけば、conic-
-   gradient + mask の重い絵は最初の1回だけ焼いて、あとは回すだけで済む。 */
+/* --- 背後で回る虹色の後光 --- */
 .jp-rays{
   position:absolute; left:50%; top:46%;
-  width:150vmax; height:150vmax; margin:-75vmax 0 0 -75vmax;
+  width:180vmax; height:180vmax; margin:-90vmax 0 0 -90vmax;
   opacity:0;
   background:conic-gradient(from 0deg,
     rgba(255,255,255,.20) 0 6deg, rgba(255,255,255,0) 6deg 18deg);
   mask-image:radial-gradient(circle, #000 8%, rgba(0,0,0,.35) 42%, transparent 70%);
   -webkit-mask-image:radial-gradient(circle, #000 8%, rgba(0,0,0,.35) 42%, transparent 70%);
 }
-#jackpot-fx.is-cutin .jp-rays{
-  opacity:1;
-  animation:jp-rays 9s linear infinite;
-  will-change:transform;
-}
+#jackpot-fx.is-cutin .jp-rays{ opacity:1; animation:jp-rays 9s linear infinite; }
 #jackpot-fx.is-out .jp-rays{ opacity:0; transition:opacity .5s ease; }
 @keyframes jp-rays{ to{ transform:rotate(360deg) } }
 
@@ -4028,18 +3998,15 @@
 }
 #jackpot-fx.is-cutin .jp-cutin{ animation:jp-slam .62s cubic-bezier(.12,1.5,.3,1) forwards; }
 #jackpot-fx.is-cutout .jp-cutin{ animation:jp-cutin-out .42s ease-in forwards; }
-/* filter:blur() のアニメは、この中に居る .jp-title（グラデ文字＋
-   drop-shadow 多重掛け）まで巻き込んで毎フレーム焼き直させる。
-   スケールと回転だけでも「叩きつけた」感は十分出るので blur は外す。 */
 @keyframes jp-slam{
-  0%   { opacity:0; transform:translateY(-50%) scale(3.2) rotate(-14deg) }
-  55%  { opacity:1; transform:translateY(-50%) scale(.92) rotate(2deg) }
+  0%   { opacity:0; transform:translateY(-50%) scale(3.2) rotate(-14deg); filter:blur(14px) }
+  55%  { opacity:1; transform:translateY(-50%) scale(.92) rotate(2deg);   filter:blur(0) }
   75%  { transform:translateY(-50%) scale(1.06) rotate(-1deg) }
   100% { opacity:1; transform:translateY(-50%) scale(1) rotate(0) }
 }
 @keyframes jp-cutin-out{
   0%{ opacity:1; transform:translateY(-50%) scale(1) }
-  100%{ opacity:0; transform:translateY(-50%) scale(1.5) translateX(28px) }
+  100%{ opacity:0; transform:translateY(-50%) scale(1.5) translateX(28px); filter:blur(10px) }
 }
 
 .jp-title{
@@ -4050,15 +4017,11 @@
   line-height:1; letter-spacing:.02em;
   background:linear-gradient(178deg, #fffdf2 6%, #ffe27a 34%, #ffb42e 52%, #fff6c9 66%, #ffcf4d 84%);
   -webkit-background-clip:text; background-clip:text; color:transparent;
-  /* drop-shadow は3枚重ねから1枚へ。多重掛けは「文字の形を1枚ずつぼかして
-     合成し直す」処理で、拡大アニメ中は毎フレーム走る＝ここが一番重かった。
-     金の縁取り(text-stroke)と外周のグロー(text-shadow)を併用すれば、
-     見た目はほぼ同じまま filter 1枚ぶんで済む。 */
-  filter:drop-shadow(0 2px 0 #7a4a00);
-  text-shadow:0 0 18px rgba(255,196,60,.75);
+  filter:drop-shadow(0 2px 0 #7a4a00) drop-shadow(0 0 18px rgba(255,196,60,.95))
+         drop-shadow(0 0 46px rgba(255,120,200,.5));
   -webkit-text-stroke:1.5px rgba(90,50,0,.55);
 }
-/* 文字の上を走る白いハイライト（斬られた光）。2往復 → 1往復に。 */
+/* 文字の上を走る白いハイライト（斬られた光） */
 .jp-title::after{
   content:attr(data-text);
   position:absolute; left:0; right:0; top:0;
@@ -4066,8 +4029,7 @@
   background-size:260% 100%;
   -webkit-background-clip:text; background-clip:text; color:transparent;
   -webkit-text-stroke:0;
-  text-shadow:none;
-  animation:jp-shine 1.1s ease-in-out .3s 1;
+  animation:jp-shine 1.4s ease-in-out .35s 2;
 }
 @keyframes jp-shine{ 0%{background-position:180% 0} 100%{background-position:-80% 0} }
 
@@ -4082,22 +4044,17 @@
   text-shadow:0 0 24px rgba(255,255,255,.25);
 }
 
-/* --- 中央から広がる衝撃波（フラッシュと同時）---
-   border-width をアニメさせると、最大 1300px まで広がる円を毎フレーム
-   塗り直すことになる（合成に載らない）。太さは固定して transform と
-   opacity だけ動かす。scale が太さも一緒に拡げてくれるので、
-   「細い点 → 太い輪」という見え方は保たれる。 */
+/* --- 中央から広がる衝撃波（フラッシュと同時）--- */
 .jp-shock{
   position:absolute; left:50%; top:46%;
   width:120px; height:120px; margin:-60px 0 0 -60px;
   border-radius:50%; border:3px solid rgba(255,240,200,.9);
   opacity:0;
-  will-change:transform, opacity;
 }
 #jackpot-fx.is-flash .jp-shock{ animation:jp-shock .75s cubic-bezier(.1,.8,.2,1) forwards; }
 @keyframes jp-shock{
-  0%{ transform:scale(.25); opacity:1 }
-  100%{ transform:scale(9); opacity:0 }
+  0%{ transform:scale(.2); opacity:1; border-width:14px }
+  100%{ transform:scale(11); opacity:0; border-width:1px }
 }
 
 /* --- 画面全体を叩く揺れ（カットインの瞬間だけ）--- */
@@ -4129,7 +4086,7 @@
   width:54px; height:6px; margin-top:-3px; border-radius:3px;
   transform-origin:0 50%;
   background:linear-gradient(90deg, rgba(255,240,200,.9), rgba(255,180,240,0));
-  opacity:0;   /* will-change は親レイヤーに任せる（.crystal-shard-trail と同じ理由）*/
+  opacity:0; will-change:transform,opacity;
 }
 .jp-shard-glow{
   position:absolute; left:50%; top:50%;
@@ -4138,16 +4095,13 @@
 }
 .jp-shard-tumble{
   position:absolute; inset:0; display:grid; place-items:center;
-  animation:jp-tumble .7s linear infinite;
-  /* will-change は付けない。親の .jp-shard が既にレイヤーなので、
-     ここにも付けるとシャード1個につき2枚ぶんの GPU メモリを使う。 */
+  animation:jp-tumble .7s linear infinite; transform-style:preserve-3d;
 }
 @keyframes jp-tumble{
   0%{ transform:rotate3d(.35,1,.25,0deg) } 100%{ transform:rotate3d(.35,1,.25,360deg) }
 }
-/* 水色シャードと同じ理由で、preserve-3d と drop-shadow を外している。
-   こちらは 72個も飛ぶので効き方はさらに大きい（光は .jp-shard-glow 担当）。*/
-.jp-shard svg{ width:21px; height:27px; display:block; }
+.jp-shard svg{ width:21px; height:27px; display:block;
+  filter:drop-shadow(0 0 6px rgba(255,215,160,.8)); }
 
 /* 水色シャード（通常演出）を、ヘッダーと同じ結晶の形に揃えるための追加。
    CrystalReward.setIconFactory() で差し込みます。 */
@@ -4524,7 +4478,16 @@
           <div class="shuffle-slider-longpress-fill" id="shuffle-slider-longpress-fill"></div>
         </div>
         <span class="shuffle-slider-hint" aria-hidden="true"></span>
-        <div class="shuffle-slider-thumb" id="shuffle-slider-thumb" aria-hidden="true">🔀</div>
+        <div class="shuffle-slider-thumb" id="shuffle-slider-thumb" aria-hidden="true">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor"
+               stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="16 3 21 3 21 8"></polyline>
+            <line x1="4" y1="20" x2="21" y2="3"></line>
+            <polyline points="21 16 21 21 16 21"></polyline>
+            <line x1="15" y1="15" x2="21" y2="21"></line>
+            <line x1="4" y1="4" x2="9" y2="9"></line>
+          </svg>
+        </div>
         <!-- チュートリアルがシャッフルの説明に到達するまでは操作できない。
              .locked のときだけ現れる禁止バッジ。つまみやトラックの見た目は
              残したまま、その上に小さく重ねるだけにして「まだ触れない」を
@@ -4962,7 +4925,14 @@
           <span class="mode-body">
             <span class="mode-card-title" data-i18n="notation">回転記号のボタンで回す</span>
             <span class="mode-desc" data-i18n="notationDesc">U・R・F などの<b>ボタンをスライド</b>して回します。</span>
-            <span class="mode-badge" data-i18n="notationBadge">手順を覚えたい方に</span>
+            <span class="mode-badge-row">
+              <span class="mode-badge" data-i18n="notationBadge">慣れている方におすすめ</span>
+              <span class="beginner-star-badge" aria-hidden="true">
+                <svg width="12" height="12" viewBox="0 0 24 24"><path fill="#00ffcc" d="M12 2l2.9 6.6 7.1.6-5.4 4.7 1.7 7-6.3-3.9-6.3 3.9 1.7-7L1.99 9.2l7.1-.6z"/></svg>
+                <svg width="12" height="12" viewBox="0 0 24 24"><path fill="#00ffcc" d="M12 2l2.9 6.6 7.1.6-5.4 4.7 1.7 7-6.3-3.9-6.3 3.9 1.7-7L1.99 9.2l7.1-.6z"/></svg>
+                <svg width="12" height="12" viewBox="0 0 24 24"><path fill="#00ffcc" d="M12 2l2.9 6.6 7.1.6-5.4 4.7 1.7 7-6.3-3.9-6.3 3.9 1.7-7L1.99 9.2l7.1-.6z"/></svg>
+              </span>
+            </span>
           </span>
           <span class="mode-check" aria-hidden="true"></span>
         </button>
@@ -5270,7 +5240,7 @@
                 "helpTip": "「ヘルプ」が使えるよ！",
                 "notation": "回転記号のボタンで回す",
                 "notationDesc": "U・R・F などのボタンをスライドして回します。",
-                "notationBadge": "手順を覚えたい方に",
+                "notationBadge": "慣れている方におすすめ",
                 "startWithThis": "この操作ではじめる",
                 "welcomeFoot": "☰ →「⚙️ 設定」からいつでも切り替えられます",
                 "language": "言語",
@@ -13576,22 +13546,6 @@ const CrystalReward = (function () {
   const rand = (a, b) => a + Math.random() * (b - a);
   const fmt  = (v) => v.toLocaleString('en-US');
 
-  /* ---- カウンターの幅を先に確保する ------------------------------------
-     数字は 0 → 100 と毎フレーム書き換わる。ヘッダーのピルは
-     width:max-content なので、桁が増えるたびにピルの幅が変わり、
-     #header (display:flex / flex-wrap:wrap) が丸ごと組み直しになる。
-     その再レイアウトはページ全体に波及するため、画面下の #controls
-     ―― つまり💡ヘルプボタン ―― まで 1px 単位で上下に震えていた。
-     アニメを始める前に「最終的に必要な桁数ぶん」の幅を入れておけば、
-     カウント中はレイアウトが一度も動かない。 */
-  function reserveCounterWidth(el, text) {
-    if (!el) return;
-    const ch = Math.max(3, String(text).length);
-    if (el._reservedCh === ch) return;      // 変化なしなら書き込まない
-    el.style.minWidth = ch + 'ch';
-    el._reservedCh = ch;
-  }
-
   /* ---- DOM の用意 ------------------------------------------------------ */
   function ensureDom() {
     walletEl      = walletEl      || document.getElementById('crystal-wallet');
@@ -13619,20 +13573,15 @@ const CrystalReward = (function () {
      を呼べば .crystal-gem の代わりに好きな要素を飛ばせます。
      （殻・残光・にじみ・回転はそのまま再利用されます）
      -------------------------------------------------------------------- */
-  let defaultIconUid = 0;
   function defaultIcon() {
-    // グラデーションの id は1個ずつ変える。同じ id を13個ばらまくと
-    // どの結晶も最初の1個の defs を参照することになり(HTML的にも不正)、
-    // 差し替え時に色が壊れる原因になる。
-    const gid = 'crystalGemGrad-shard-' + (defaultIconUid++);
     const gem = document.createElement('div');
     gem.className = 'crystal-gem';
     gem.innerHTML =
       '<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">' +
-        '<defs><linearGradient id="' + gid + '" x1="0" y1="0" x2="1" y2="1">' +
+        '<defs><linearGradient id="crystalGemGrad-shard" x1="0" y1="0" x2="1" y2="1">' +
           '<stop offset="0" stop-color="#eafcff"/><stop offset="1" stop-color="#6ad9f0"/>' +
         '</linearGradient></defs>' +
-        '<polygon points="32,7 57,21 32,35 7,21" fill="url(#' + gid + ')"/>' +
+        '<polygon points="32,7 57,21 32,35 7,21" fill="url(#crystalGemGrad-shard)"/>' +
         '<polygon points="7,21 32,35 32,59 7,45" fill="#2b86ad"/>' +
         '<polygon points="57,21 32,35 32,59 57,45" fill="#14547a"/>' +
         '<g stroke="#0b2c40" stroke-width="1.4" opacity=".5">' +
@@ -13689,37 +13638,13 @@ const CrystalReward = (function () {
   }
 
   /* ---- ヘッダーUIの反応 ------------------------------------------------ */
-  let pulseSeq = 0, lastTickAt = 0;
   function pulseWallet(kind) {
     if (!walletEl) return;
-
-    // 到達は staggerMs=26ms 間隔で来るので、素直に毎回張り替えると 0.2秒の
-    // アニメが再生される前に 8回も潰し合う。見た目は変わらないのに負荷だけ
-    // 増えるので、tick は 90ms に1回までに間引く（hit は必ず出す）。
-    const now = performance.now();
-    if (kind !== 'hit') {
-      if (now - lastTickAt < 90) return;
-      lastTickAt = now;
-    }
-
     const cls = kind === 'hit' ? 'is-hit' : 'is-tick';
-    const seq = ++pulseSeq;
     walletEl.classList.remove('is-hit', 'is-tick');
-
-    // ★ここが強制同期レイアウトの発生源だった。
-    //   void walletEl.offsetWidth は「アニメを頭から再生させる」ための
-    //   常套手段だが、直前まで rAF ループが transform を書きまくっている
-    //   最中に読むと、その場でページ全体のレイアウトを確定させてしまう
-    //   (read-after-write = layout thrashing)。しかも到達のたびに走る。
-    //   1フレーム挟んでクラスを付け直せば、レイアウトを一切読まずに
-    //   同じ「再生し直し」が得られる。
-    requestAnimationFrame(() => {
-      if (seq !== pulseSeq || !walletEl) return;
-      walletEl.classList.add(cls);
-      setTimeout(() => {
-        if (seq === pulseSeq && walletEl) walletEl.classList.remove(cls);
-      }, kind === 'hit' ? 560 : 220);
-    });
+    void walletEl.offsetWidth;
+    walletEl.classList.add(cls);
+    setTimeout(() => walletEl.classList.remove(cls), kind === 'hit' ? 560 : 220);
   }
   function spawnRing(isFinal) {
     if (!walletEl) return;
@@ -13735,7 +13660,6 @@ const CrystalReward = (function () {
   function rollUpCounter(el, from, to, duration, onDone) {
     const d = duration || 700;
     const t0 = performance.now();
-    reserveCounterWidth(el, fmt(Math.max(Math.abs(from), Math.abs(to))));
     if (el) el.classList.add('is-rolling');
     (function step(now) {
       const p = Math.min((now - t0) / d, 1);
@@ -13772,10 +13696,6 @@ const CrystalReward = (function () {
     const to   = balance + amount;
     balance = to;
     onCompleteCb = opts.onComplete || null;
-
-    // 演出が始まる前に、最終値ぶんの桁幅を確保しておく（ヘッダーの
-    // 組み直し＝画面全体の再レイアウトを1回で終わらせるため）。
-    reserveCounterWidth(countEl, fmt(to));
 
     showPopup(amount, opts.popupAnchor);
 
@@ -13838,7 +13758,6 @@ const CrystalReward = (function () {
         flyMs: rand(CONFIG.flyMsMin, CONFIG.flyMsMax),
         phase: Math.random() * 6.28,
         px: ox, py: oy,
-        trailT: '', trailO: '0',   // 直前に書いた残光の値（無駄書き防止）
         share: amount / n,
         done: false
       });
@@ -13892,19 +13811,15 @@ const CrystalReward = (function () {
         'translate3d(' + x.toFixed(2) + 'px,' + y.toFixed(2) + 'px,0) scale(' + scale.toFixed(3) + ')';
       if (alpha !== 1) s.el.style.opacity = alpha.toFixed(2);
 
-      // 残光は「前フレームからの移動量」で長さと向きを決める。
-      // 同じ値の書き戻しでもスタイル再計算は走るので、変わったときだけ書く。
+      // 残光は「前フレームからの移動量」で長さと向きを決める
       const mvx = x - s.px, mvy = y - s.py;
       const speed = Math.hypot(mvx, mvy);
       if (speed > 1.5) {
         const deg = Math.atan2(mvy, mvx) * 180 / Math.PI + 180;
-        const tr = 'rotate(' + deg.toFixed(1) + 'deg) scaleX(' + Math.min(speed / 7, 4.5).toFixed(2) + ')';
-        const op = Math.min(speed / 26, 0.85).toFixed(2);
-        if (tr !== s.trailT) { s.trail.style.transform = tr; s.trailT = tr; }
-        if (op !== s.trailO) { s.trail.style.opacity = op; s.trailO = op; }
-      } else if (s.trailO !== '0') {
+        s.trail.style.transform = 'rotate(' + deg.toFixed(1) + 'deg) scaleX(' + Math.min(speed / 7, 4.5).toFixed(2) + ')';
+        s.trail.style.opacity = Math.min(speed / 26, 0.85).toFixed(2);
+      } else if (s.trail.style.opacity !== '0') {
         s.trail.style.opacity = '0';
-        s.trailO = '0';
       }
       s.px = x; s.py = y;
     }
@@ -13980,7 +13895,7 @@ const CrystalReward = (function () {
     const from = balance;
     balance = v;
     if (animate && countEl) rollUpCounter(countEl, from, v, 450);
-    else if (countEl) { reserveCounterWidth(countEl, fmt(v)); countEl.textContent = fmt(v); }
+    else if (countEl) countEl.textContent = fmt(v);
     lastRendered = displayValue = targetValue = v;
   }
   function getBalance() { ensureDom(); return balance; }
@@ -14032,7 +13947,7 @@ const ShardJackpot = (function () {
   /* ---- 調整用パラメータ（ここだけ触れば手触りが変わる）------------------ */
   const CONFIG = {
     amount:       10000,  // 既定の獲得量
-    count:           48,  // 噴き出す虹シャードの数（72 → 48。端末に応じて更に間引く）
+    count:           72,  // 噴き出す虹シャードの数（50〜100推奨）
     dimMs:          620,  // ① 暗転してから白フラッシュまでの「タメ」
     cutInHoldMs:   1000,  // ② カットイン文字を見せておく時間
     fountainMs:     520,  // ③ 噴水のように上へ舞い上がる時間
@@ -14059,17 +13974,6 @@ const ShardJackpot = (function () {
   const reduced = () =>
     window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-  /* 0 → 10,000 は桁が 1 から 6 まで動く。先に幅を確保しておかないと、
-     ロールアップ中ずっとヘッダーが組み直され、画面下まで揺れる。
-     （CrystalReward 側の reserveCounterWidth と同じ考え方） */
-  function reserveCounterWidth(el, text) {
-    if (!el) return;
-    const ch = Math.max(3, String(text).length);
-    if (el._reservedCh === ch) return;
-    el.style.minWidth = ch + 'ch';
-    el._reservedCh = ch;
-  }
-
   const later = (fn, ms) => { timers.push(setTimeout(fn, ms)); };
   const clearTimers = () => { timers.forEach(clearTimeout); timers = []; };
 
@@ -14081,69 +13985,24 @@ const ShardJackpot = (function () {
     } catch (e) {}
   }
 
-  /* ---- 虹シャードの SVG（ヘッダーUIのアイコンと同じ形）-------------------
-     以前は 1個ごとに SVG 文字列を組み立てて innerHTML で流し込んでいた。
-     つまり噴出の瞬間に「SVGパース ×48回」「グラデーション定義 ×96個」が
-     一気に走り、そこが最初のカクつきになっていた。
-       ・グラデーションは文書に1組だけ置いて全員で参照する
-       ・シャード1個を雛形として作り、あとは cloneNode で複製する
-     に変えて、生成コストをほぼゼロにする。 */
-  const SHARD_DEFS_ID = 'jp-shard-defs';
-  function ensureShardDefs() {
-    if (document.getElementById(SHARD_DEFS_ID)) return;
-    const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-    svg.setAttribute('id', SHARD_DEFS_ID);
-    svg.setAttribute('aria-hidden', 'true');
-    svg.setAttribute('width', '0');
-    svg.setAttribute('height', '0');
-    svg.style.cssText = 'position:absolute;width:0;height:0;overflow:hidden;pointer-events:none';
-    svg.innerHTML =
+  /* ---- 虹シャードの SVG（ヘッダーUIのアイコンと同じ形）------------------- */
+  let uid = 0;
+  function rainbowShardSvg(size) {
+    const id = 'jpShard' + (uid++);
+    return '<svg viewBox="0 0 64 64" width="' + size + '" xmlns="http://www.w3.org/2000/svg">' +
       '<defs>' +
-        '<linearGradient id="jpShardA" x1="0" y1="0" x2="0" y2="1">' +
+        '<linearGradient id="' + id + 'a" x1="0" y1="0" x2="0" y2="1">' +
           '<stop offset="0" stop-color="#fdfbff"/><stop offset=".5" stop-color="#ffd7f0"/>' +
           '<stop offset="1" stop-color="#c9e3ff"/></linearGradient>' +
-        '<linearGradient id="jpShardB" x1="0" y1="0" x2="0" y2="1">' +
+        '<linearGradient id="' + id + 'b" x1="0" y1="0" x2="0" y2="1">' +
           '<stop offset="0" stop-color="#9fc9ff"/><stop offset=".5" stop-color="#c9a3e6"/>' +
           '<stop offset="1" stop-color="#e6a3b8"/></linearGradient>' +
-      '</defs>';
-    document.body.appendChild(svg);
-  }
-
-  let shardTpl = null;
-  function shardTemplate() {
-    if (shardTpl) return shardTpl;
-    ensureShardDefs();
-    const el = document.createElement('div');
-    el.className = 'jp-shard';
-    const trail = document.createElement('span');
-    trail.className = 'jp-shard-trail';
-    const glow = document.createElement('span');
-    glow.className = 'jp-shard-glow';
-    const tumble = document.createElement('div');
-    tumble.className = 'jp-shard-tumble';
-    tumble.innerHTML =
-      '<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">' +
-        '<polygon points="32,4 50,26 32,60" fill="url(#jpShardB)"/>' +
-        '<polygon points="32,4 14,26 32,60" fill="url(#jpShardA)"/>' +
-        '<polygon points="14,26 50,26 32,60" fill="#3d3560" opacity=".18"/>' +
-        '<polygon points="32,4 41,26 32,38 23,26" fill="#fff" opacity=".55"/>' +
-      '</svg>';
-    el.appendChild(trail); el.appendChild(glow); el.appendChild(tumble);
-    shardTpl = el;
-    return shardTpl;
-  }
-
-  /* 端末に合わせてシャードの数を間引く。非力な端末ほど「豪雨」より
-     「止まらないこと」のほうが気持ちいいので、思い切って減らす。 */
-  function shardCount(requested) {
-    const n = requested || CONFIG.count;
-    const weak = (navigator.hardwareConcurrency || 8) <= 4 ||
-                 (navigator.deviceMemory || 8) <= 4;
-    if (weak) return Math.max(16, Math.round(n * 0.55));
-    if (Math.min(window.innerWidth, window.innerHeight) < 420) {
-      return Math.max(20, Math.round(n * 0.75));
-    }
-    return n;
+      '</defs>' +
+      '<polygon points="32,4 50,26 32,60" fill="url(#' + id + 'b)"/>' +
+      '<polygon points="32,4 14,26 32,60" fill="url(#' + id + 'a)"/>' +
+      '<polygon points="14,26 50,26 32,60" fill="#3d3560" opacity=".18"/>' +
+      '<polygon points="32,4 41,26 32,38 23,26" fill="#fff" opacity=".55"/>' +
+    '</svg>';
   }
 
   /* ---- 演出用の DOM を一度だけ組み立てる -------------------------------- */
@@ -14245,26 +14104,13 @@ const ShardJackpot = (function () {
   }
 
   /* ---- ヘッダーUIの反応 -------------------------------------------------- */
-  let pulseSeq2 = 0, lastTick2At = 0;
   function pulsePill(kind) {
     if (!pillEl) return;
-    // CrystalReward.pulseWallet と同じ対策。
-    // ・tick は間引く（72個ぶん張り替えると再生前に潰し合うだけ）
-    // ・offsetWidth を読まない（rAF ループ中の強制同期レイアウトを避ける）
-    const now = performance.now();
-    if (kind !== 'hit') {
-      if (now - lastTick2At < 90) return;
-      lastTick2At = now;
-    }
     const cls = kind === 'hit' ? 'is-hit2' : 'is-tick2';
-    const seq = ++pulseSeq2;
     pillEl.classList.remove('is-hit2', 'is-tick2');
-    requestAnimationFrame(() => {
-      if (seq !== pulseSeq2 || !pillEl) return;
-      pillEl.classList.add(cls);
-      later(() => { if (seq === pulseSeq2 && pillEl) pillEl.classList.remove(cls); },
-            kind === 'hit' ? 620 : 220);
-    });
+    void pillEl.offsetWidth;
+    pillEl.classList.add(cls);
+    later(() => pillEl.classList.remove(cls), kind === 'hit' ? 620 : 220);
   }
   function spawnRing(isFinal) {
     if (!pillEl) return;
@@ -14289,7 +14135,6 @@ const ShardJackpot = (function () {
     onCompleteCb = opts.onComplete || null;
     rollStarted = false;
     arrived = 0;
-    reserveCounterWidth(countEl, fmt(balance));
 
     /* モーション軽減／裏タブ：数字だけ気持ちよく伸ばして終わる */
     if (reduced() || document.hidden || !pillEl || !countEl) {
@@ -14345,19 +14190,25 @@ const ShardJackpot = (function () {
     const wr = pillEl.getBoundingClientRect();
     const tx = wr.left + wr.width / 2, ty = wr.top + wr.height / 2;
 
-    const n = shardCount(opts.count);
+    const n = opts.count || CONFIG.count;
     /* 画面が小さいほど噴水を控えめにして、画面外へ吹き飛ばさない */
     const spreadX = Math.min(1, window.innerWidth  / 620);
     const spreadY = Math.min(1, window.innerHeight / 860);
     const frag = document.createDocumentFragment();
-    const tpl = shardTemplate();
     shards = [];
 
     for (let i = 0; i < n; i++) {
-      const el = tpl.cloneNode(true);          // SVGのパースは起きない
-      const trail = el.firstChild;             // .jp-shard-trail
-      const tumble = el.lastChild;             // .jp-shard-tumble
+      const el = document.createElement('div');
+      el.className = 'jp-shard';
+      const trail = document.createElement('span');
+      trail.className = 'jp-shard-trail';
+      const glow = document.createElement('span');
+      glow.className = 'jp-shard-glow';
+      const tumble = document.createElement('div');
+      tumble.className = 'jp-shard-tumble';
       tumble.style.animationDuration = rand(0.45, 0.95).toFixed(2) + 's';
+      tumble.innerHTML = rainbowShardSvg(21);
+      el.appendChild(trail); el.appendChild(glow); el.appendChild(tumble);
       el.style.transform = 'translate3d(' + ox + 'px,' + oy + 'px,0) scale(0)';
       frag.appendChild(el);
 
@@ -14376,7 +14227,6 @@ const ShardJackpot = (function () {
         dir: (i % 7 === 0) ? -1 : 1,                // たまに逆回りを混ぜて渦を濁す
         tx: tx, ty: ty,
         px: ox, py: oy,
-        trailT: '', trailO: '0',   // 直前に書いた残光の値（無駄書き防止）
         captured: false, sx: 0, sy: 0, r0: 0, a0: 0,
         done: false
       });
@@ -14431,19 +14281,16 @@ const ShardJackpot = (function () {
         'translate3d(' + x.toFixed(2) + 'px,' + y.toFixed(2) + 'px,0) scale(' + scale.toFixed(3) + ')';
       if (alpha !== 1) s.el.style.opacity = alpha.toFixed(2);
 
-      /* 残光は「前フレームからの移動量」で長さと向きを決める。
-         同じ値でも書けばスタイル再計算が走るので、変わったときだけ書く。 */
+      /* 残光は「前フレームからの移動量」で長さと向きを決める */
       const mvx = x - s.px, mvy = y - s.py;
       const speed = Math.hypot(mvx, mvy);
       if (speed > 1.5) {
         const deg = Math.atan2(mvy, mvx) * 180 / Math.PI + 180;
-        const tr = 'rotate(' + deg.toFixed(1) + 'deg) scaleX(' + Math.min(speed / 6, 5).toFixed(2) + ')';
-        const op = Math.min(speed / 22, 0.9).toFixed(2);
-        if (tr !== s.trailT) { s.trail.style.transform = tr; s.trailT = tr; }
-        if (op !== s.trailO) { s.trail.style.opacity = op; s.trailO = op; }
-      } else if (s.trailO !== '0') {
+        s.trail.style.transform =
+          'rotate(' + deg.toFixed(1) + 'deg) scaleX(' + Math.min(speed / 6, 5).toFixed(2) + ')';
+        s.trail.style.opacity = Math.min(speed / 22, 0.9).toFixed(2);
+      } else if (s.trail.style.opacity !== '0') {
         s.trail.style.opacity = '0';
-        s.trailO = '0';
       }
       s.px = x; s.py = y;
     }
@@ -14481,7 +14328,6 @@ const ShardJackpot = (function () {
   function rollUpCounter(el, from, to, duration, onDone) {
     const d = duration || 900;
     const t0 = performance.now();
-    reserveCounterWidth(el, fmt(Math.max(Math.abs(from), Math.abs(to))));
     let last = null;
     (function step(now) {
       const p = Math.min((now - t0) / d, 1);
@@ -14542,7 +14388,7 @@ const ShardJackpot = (function () {
     const from = balance;
     balance = v;
     if (animate && countEl) rollUpCounter(countEl, from, v, 600);
-    else if (countEl) { reserveCounterWidth(countEl, fmt(v)); countEl.textContent = fmt(v); }
+    else if (countEl) countEl.textContent = fmt(v);
     displayValue = targetValue = lastRendered = v;
   }
   function getBalance() { ensureDom(); return balance; }
