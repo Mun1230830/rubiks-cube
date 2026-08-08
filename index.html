@@ -5480,7 +5480,7 @@
                 "helpTip": "Help is available!",
                 "notation": "Turn with notation buttons",
                 "notationDesc": "Slide the U, R, F buttons to turn.",
-                "notationBadge": "For learning algorithms",
+                "notationBadge": "Best for experienced users",
                 "startWithThis": "Start with this",
                 "welcomeFoot": "Switch anytime in ☰ → Settings",
                 "language": "Language",
@@ -5720,7 +5720,7 @@
                 "helpTip": "可以使用「帮助」！",
                 "notation": "用转动记号按钮转",
                 "notationDesc": "滑动 U・R・F 等按钮来转动。",
-                "notationBadge": "适合记手法",
+                "notationBadge": "熟手推荐",
                 "startWithThis": "用这个方式开始",
                 "welcomeFoot": "可随时在 ☰ →「设置」中切换",
                 "language": "语言",
@@ -5899,7 +5899,7 @@
     "helpTip": "可以使用「幫助」！",
     "notation": "用轉動記號按鈕轉",
     "notationDesc": "滑動 U・R・F 等按鈕來轉動。",
-    "notationBadge": "適合記手法",
+    "notationBadge": "熟手推薦",
     "startWithThis": "用這個方式開始",
     "welcomeFoot": "可隨時在 ☰ →「設定」中切換",
     "language": "語言",
@@ -6078,7 +6078,7 @@
                 "helpTip": "'도움말'을 쓸 수 있어요!",
                 "notation": "회전 기호 버튼으로 돌리기",
                 "notationDesc": "U・R・F 등의 버튼을 밀어서 돌립니다.",
-                "notationBadge": "알고리즘을 익히고 싶다면",
+                "notationBadge": "익숙하다면 추천",
                 "startWithThis": "이 방식으로 시작",
                 "welcomeFoot": "☰ → 설정에서 언제든 전환할 수 있어요",
                 "language": "언어",
@@ -6257,7 +6257,7 @@
             "helpTip": "¡La ayuda está disponible!",
             "notation": "Girar con botones de notación",
             "notationDesc": "Desliza los botones U, R, F para girar.",
-            "notationBadge": "Para aprender algoritmos",
+            "notationBadge": "Ideal si ya tienes experiencia",
             "startWithThis": "Empezar así",
             "welcomeFoot": "Puedes cambiarlo en ☰ → Ajustes",
             "language": "Idioma",
@@ -6436,7 +6436,7 @@
             "helpTip": "Fitur Bantuan tersedia!",
             "notation": "Putar dengan tombol notasi",
             "notationDesc": "Geser tombol U, R, F untuk memutar.",
-            "notationBadge": "Untuk belajar algoritma",
+            "notationBadge": "Cocok untuk yang berpengalaman",
             "startWithThis": "Mulai dengan ini",
             "welcomeFoot": "Bisa diganti kapan saja di ☰ → Pengaturan",
             "language": "Bahasa",
@@ -6615,7 +6615,7 @@
             "helpTip": "Доступна подсказка!",
             "notation": "Поворот кнопками",
             "notationDesc": "Проводите по кнопкам U, R, F, чтобы повернуть.",
-            "notationBadge": "Для изучения формул",
+            "notationBadge": "Для опытных",
             "startWithThis": "Начать так",
             "welcomeFoot": "Переключить можно в ☰ → Настройки",
             "language": "Язык",
@@ -6794,7 +6794,7 @@
             "helpTip": "A Ajuda está disponível!",
             "notation": "Girar com botões de notação",
             "notationDesc": "Deslize os botões U, R, F para girar.",
-            "notationBadge": "Para aprender algoritmos",
+            "notationBadge": "Ideal para quem já tem experiência",
             "startWithThis": "Começar assim",
             "welcomeFoot": "Troque quando quiser em ☰ → Ajustes",
             "language": "Idioma",
@@ -9479,6 +9479,15 @@
     if (openTutorialBtn) {
       openTutorialBtn.addEventListener('click', () => {
         settingsOverlay.style.display = 'none';
+        // チュートリアルは「キューブを指でなぞる」操作前提で作られている。
+        // 回転記号モードのまま見直すと、記号ボタンが表示されたままチュート
+        // リアルが進んでしまい、説明とUIが噛み合わないバグになる。見直しを
+        // 始める前に、必ずタップキューブモードへ切り替えておく。
+        if (!tapCubeEnabled) {
+          tapCubeEnabled = true;
+          applyTapCubeMode();
+          try { localStorage.setItem(TAP_KEY, '1'); } catch (err) { /* unavailable */ }
+        }
         // 見直しは最初から。途中再開は「離脱してすぐ戻ってきた」場合の
         // 救済であって、自分から見に来た人が求めているものではない。
         startTutorial(0);
@@ -12101,13 +12110,15 @@ const ZBLL_DATA = [
       // body の transform に引きずられない。
       setTimeout(() => {
         // ★報酬の入口はこの1か所だけ。
-        //   ① 水色シャード +100（確定）
+        //   ① 水色シャード +100（自己記録更新のときだけ+150。ガイドあり／
+        //      なしはそれぞれ別のベストと比較済み＝isNewBestに反映済み）
         //   ② 虹色シャード +10,000（50%抽選 → 当たれば大当たり確定演出）
         //   抽選も保存も演出も handleClearReward() の中で完結します。
         if (window.handleClearReward && gameState === 'solved') {
           handleClearReward({
             originEl: document.getElementById('canvas-container'), // キューブ中心から弾ける
-            popupAnchor: msgEl           // 「＋100 GET!」を SOLVED! バナーの下に出す
+            popupAnchor: msgEl,          // 「＋100 GET!」を SOLVED! バナーの下に出す
+            isNewBest: isNewBest         // trueなら100→150に増額
           });
         }
       }, 560);
@@ -14414,7 +14425,13 @@ window.ShardJackpot = ShardJackpot;
 
 /* ---- ゲームバランスの設定（数字はここだけ触ればOK）-------------------- */
 const REWARD = {
-  CYAN_PER_CLEAR: 100,     // ① クリアで必ずもらえる水色シャード
+  CYAN_PER_CLEAR:    100,   // ① 通常クリアでもらえる水色シャード
+  CYAN_NEW_BEST:     150,   // ①' 自己記録更新クリアでもらえる水色シャード
+                             //    ガイドあり／ガイドなしはそれぞれ別々の
+                             //    ベストと比較されている(stopTimer側)ため、
+                             //    「どちらの区分であっても、その区分の
+                             //    自己ベストを更新したら150」で自動的に
+                             //    両方に効く。ここで区分ごとに分ける必要はない。
   JACKPOT_RATE:   0.5,     // ② 大当たりの確率（0.5 = 50%）
   JACKPOT_AMOUNT: 10000    //    当たったときの虹色シャード
 };
@@ -14459,6 +14476,9 @@ CrystalReward.setIconFactory(function () {
 
      opts.originEl    … シャードが弾け出す元の要素（既定：画面中央）
      opts.popupAnchor … 「＋100 GET!」ポップアップを出す基準（既定：画面中央）
+     opts.isNewBest   … このクリアが自己記録更新だったか。true なら水色
+                         シャードが 100 → 150 に増える(ガイドあり／なしの
+                         どちらの区分の更新でも同様に150になる)。
 
      戻り値: { cyan, rainbow, jackpot } — 実績や解析に流したいときに使えます。
 
@@ -14472,7 +14492,7 @@ function handleClearReward(opts) {
   /* ---- ② 大当たり抽選（50%）------------------------------------------ */
   const jackpot = (Math.random() < REWARD.JACKPOT_RATE);
   const result = {
-    cyan:    REWARD.CYAN_PER_CLEAR,
+    cyan:    opts.isNewBest ? REWARD.CYAN_NEW_BEST : REWARD.CYAN_PER_CLEAR,
     rainbow: jackpot ? REWARD.JACKPOT_AMOUNT : 0,
     jackpot: jackpot
   };
