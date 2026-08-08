@@ -237,7 +237,7 @@
                 "tutMenuOpenBody": "🏆 <b>記録</b> … ベストタイムが確認できます。<br>⚙️ <b>設定</b> … キューブの大きさや回転スピードなどを自由に調整できます。",
 
                 "tutShuffleTitle": "キューブをまぜてみよう",
-                "tutShuffleBody": "右側のシャッフルボタン(<span class=\"tut-em\">🔀</span>)を、<br>① <b>上へ持ち上げる</b><br>② そのまま <b>左へスライド</b><br><span class=\"tut-em\">「逆L字」</span>を描くイメージで操作してみよう！",
+                "tutShuffleBody": "右側のシャッフルボタン(<span class=\"tut-em tut-icon\"><svg viewBox=\"0 0 24 24\" width=\"16\" height=\"16\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><polyline points=\"16 3 21 3 21 8\"></polyline><line x1=\"4\" y1=\"20\" x2=\"21\" y2=\"3\"></line><polyline points=\"21 16 21 21 16 21\"></polyline><line x1=\"15\" y1=\"15\" x2=\"21\" y2=\"21\"></line><line x1=\"4\" y1=\"4\" x2=\"9\" y2=\"9\"></line></svg></span>)を、<br>① <b>上へ持ち上げる</b><br>② そのまま <b>左へスライド</b><br><span class=\"tut-em\">「逆L字」</span>を描くイメージで操作してみよう！",
                 "tutShuffleArmed": "いいね！そのまま<span class=\"tut-em\">「左へ」</span>スライド！",
                 "tutShuffleDone": "準備OK！🎉<br><br>キューブを動かすとタイマーがスタートします。",
 
@@ -477,7 +477,7 @@
                 "tutMenuOpenBody": "🏆 <b>Records</b> — your best times. Solves that used 💡 Help go on <b>a separate board</b>, so use it freely!<br>⚙️ <b>Settings</b> — colours, view and language, all changeable later.",
 
                 "tutShuffleTitle": "Let's scramble it",
-                "tutShuffleBody": "Take the <span class=\"tut-em\">🔀</span> handle below ≡ and<br>① <b>lift it upward</b>, then<br>② <b>tip it slightly left</b>.<br>Think of drawing an <span class=\"tut-em\">L shape</span>.",
+                "tutShuffleBody": "Take the <span class=\"tut-em tut-icon\"><svg viewBox=\"0 0 24 24\" width=\"16\" height=\"16\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><polyline points=\"16 3 21 3 21 8\"></polyline><line x1=\"4\" y1=\"20\" x2=\"21\" y2=\"3\"></line><polyline points=\"21 16 21 21 16 21\"></polyline><line x1=\"15\" y1=\"15\" x2=\"21\" y2=\"21\"></line><line x1=\"4\" y1=\"4\" x2=\"9\" y2=\"9\"></line></svg></span> handle below ≡ and<br>① <b>lift it upward</b>, then<br>② <b>tip it slightly left</b>.<br>Think of drawing an <span class=\"tut-em\">L shape</span>.",
                 "tutShuffleArmed": "Nice! Now tip it <span class=\"tut-em\">to the left</span>!",
                 "tutShuffleDone": "<b>Scrambled!</b> The timer starts from here.<br>Straight swipes are reserved for turning the cube, so scrambling deliberately needs a corner — no accidental scrambles.<br>Tip: <b>hold the handle for 3 seconds</b> to reset to a solved cube.",
 

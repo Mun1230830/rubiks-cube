@@ -4259,6 +4259,10 @@
 }
 #tut-body b { color: #fff; }
 #tut-body .tut-em { color: #00ffcc; font-weight: 800; }
+#tut-body .tut-icon,
+#tut-guide .tut-icon { display: inline-flex; vertical-align: -3px; margin: 0 2px; }
+#tut-body .tut-icon svg,
+#tut-guide .tut-icon svg { display: block; }
 
 /* いま画面のどこを、どちらへなぞればよいか。ここだけは説明文と切り離し、
    毎フレーム「見たまま」に描き替える。キューブを持ち替えたとたんに
