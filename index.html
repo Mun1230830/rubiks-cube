@@ -6014,12 +6014,16 @@ const ZBLL_DATA = [
         //   ① 水色シャード +100（自己記録更新のときだけ+150。ガイドあり／
         //      なしはそれぞれ別のベストと比較済み＝isNewBestに反映済み）
         //   ② 虹色シャード +10,000（1%抽選 → 当たれば大当たり確定演出）
+        //      ただしキューブサイズを3%以下のまま解いた回は3%にアップ。
         //   抽選も保存も演出も handleClearReward() の中で完結します。
         if (window.handleClearReward && gameState === 'solved') {
           handleClearReward({
             originEl: document.getElementById('canvas-container'), // キューブ中心から弾ける
             popupAnchor: msgEl,          // 「＋100 GET!」を SOLVED! バナーの下に出す
-            isNewBest: isNewBest         // trueなら100→150に増額
+            isNewBest: isNewBest,        // trueなら100→150に増額
+            // 記録に残すサイズ(addRecord)と完全に同じ条件。途中でサイズを
+            // 変えた回は null になり、確率アップの対象外。
+            cubeSize: sizeSteady ? sizeAtScramble : null
           });
         }
       }, 560);
@@ -8334,6 +8338,15 @@ const REWARD = {
                              //    自己ベストを更新したら150」で自動的に
                              //    両方に効く。ここで区分ごとに分ける必要はない。
   JACKPOT_RATE:   0.01,    // ② 大当たりの確率（0.01 = 1%）
+  // ②' キューブを極小サイズ(≦3%)にしたまま解いたときの確率アップ。
+  //     サイズバッジが虹色になる 1〜3% の範囲とちょうど一致させてあり、
+  //     「小さいほど偉い」という既存の演出と報酬をつなげている。
+  //     途中でサイズを変えた回(sizeSteady=false)は対象外＝サイズ記録が
+  //     残らない回と同じ条件。
+  //     ★これは意図的な隠し仕様。画面のどこにも「確率アップ中」等は
+  //       出さないこと。気づいた人だけが得をする、静かなご褒美。
+  JACKPOT_TINY_SIZE:  3,     //    この％以下なら確率アップ
+  JACKPOT_TINY_RATE:  0.03,  //    そのときの確率（0.03 = 3%）
   JACKPOT_AMOUNT: 10000    //    当たったときの虹色シャード
 };
 
@@ -8380,8 +8393,13 @@ CrystalReward.setIconFactory(function () {
      opts.isNewBest   … このクリアが自己記録更新だったか。true なら水色
                          シャードが 100 → 150 に増える(ガイドあり／なしの
                          どちらの区分の更新でも同様に150になる)。
+     opts.cubeSize    … そのソルブ中ずっと変えなかったキューブサイズ(%)。
+                         途中で変えた回は null。3%以下なら大当たり確率が
+                         1% → 3% にアップする。
 
-     戻り値: { cyan, rainbow, jackpot } — 実績や解析に流したいときに使えます。
+     戻り値: { cyan, rainbow, jackpot, rate, tinySize } — 実績や解析に
+             流したいときに使えます。rate / tinySize は隠し仕様のため
+             画面表示には使わないこと。
 
      ★ 設計のキモ：
        抽選は「演出の前」に済ませて結果を確定させます。演出はその結果を
@@ -8390,12 +8408,20 @@ CrystalReward.setIconFactory(function () {
 function handleClearReward(opts) {
   opts = opts || {};
 
-  /* ---- ② 大当たり抽選（1%）------------------------------------------- */
-  const jackpot = (Math.random() < REWARD.JACKPOT_RATE);
+  /* ---- ② 大当たり抽選（通常1％／極小サイズなら3％）--------------------
+     opts.cubeSize は「そのソルブ中ずっと動かさなかったサイズ(%)」。
+     途中で変えた回は呼び出し側が null を渡してくるので、その場合は
+     素直に通常確率にフォールバックする。 */
+  const tinySize = (typeof opts.cubeSize === 'number' &&
+                    opts.cubeSize <= REWARD.JACKPOT_TINY_SIZE);
+  const rate = tinySize ? REWARD.JACKPOT_TINY_RATE : REWARD.JACKPOT_RATE;
+  const jackpot = (Math.random() < rate);
   const result = {
     cyan:    opts.isNewBest ? REWARD.CYAN_NEW_BEST : REWARD.CYAN_PER_CLEAR,
     rainbow: jackpot ? REWARD.JACKPOT_AMOUNT : 0,
-    jackpot: jackpot
+    jackpot: jackpot,
+    rate:    rate,      // 実際に使われた確率（解析用）
+    tinySize: tinySize  // 確率アップが効いたか
   };
 
   /* ---- ① 通常報酬（水色 +100）の演出 ---------------------------------
