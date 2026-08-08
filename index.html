@@ -405,6 +405,42 @@
     .shuffle-slider.muted .shuffle-slider-hint {
       color: #6a6a78;
     }
+    /* --- チュートリアル未到達のあいだはロック ------------------------
+       まだ「シャッフルしてみよう」の説明に来ていないのに先に混ぜられて
+       しまうと、後のステップと噛み合わなくなる。トラックやつまみの形は
+       そのまま残し、彩度と存在感だけを落として、右上に小さな禁止バッジを
+       重ねる。押しても何も起きない(pointer-events:none)ので、誤操作の
+       手応えごと消してしまう。 */
+    .shuffle-slider.locked {
+      pointer-events: none;
+      cursor: not-allowed;
+      filter: grayscale(0.9);
+      opacity: 0.38;
+      box-shadow: none;
+    }
+    .shuffle-slider.locked .shuffle-slider-hint {
+      opacity: 0;
+    }
+    .shuffle-slider-lock {
+      position: absolute;
+      top: -7px;
+      right: -7px;
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      background: #1c1c24;
+      border: 1.5px solid #5a5a6c;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      line-height: 1;
+      pointer-events: none;
+      z-index: 2;
+    }
+    .shuffle-slider.locked .shuffle-slider-lock {
+      display: flex;
+    }
     /* そろった瞬間: 逆にはっきり光らせて、次のシャッフルへ誘う。 */
     .shuffle-slider.celebrate {
       opacity: 1;
@@ -573,6 +609,14 @@
       color: #000;
       border-color: #00ffcc;
     }
+    /* チュートリアルが記録/設定の説明中は、ボタン自体を押させない。
+       押せてしまうと裏で記録/設定オーバーレイが開き、保持しているはずの
+       ドロワーやその後のステップと噛み合わなくなるため。 */
+    .menu-actions.tut-explain-lock .action-btn {
+      pointer-events: none;
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
     /* Every overlay's bottom action row (settings/records/stats/OLL/PLL/
        ZBLL, and anything added later) shares this same larger tap target --
        styled once via the shared .settings-actions wrapper class instead of
@@ -591,6 +635,13 @@
       width: 100%;
       position: relative;
       touch-action: none;
+    }
+    /* チュートリアルが「記録/設定」ドロワーの中身を説明している間は、
+       背後のキューブに触れて回せてしまうと、まだ混ぜてもいないのに
+       局面が崩れたりタイマーの前提が狂ったりして後続ステップと噛み合わ
+       なくなる。説明を読んでいるだけの短い間だけ、指を素通りさせる。 */
+    #canvas-container.tut-locked {
+      pointer-events: none;
     }
     #controls {
       padding: 8px 12px 12px;
@@ -1668,6 +1719,12 @@
       border-color: #ffd54a;
       color: #ffd54a;
       box-shadow: 0 0 18px rgba(255, 213, 74, 0.45), inset 0 0 14px rgba(255, 213, 74, 0.14);
+    }
+    /* チュートリアルがこのボタン自体を説明している間は押させない。 */
+    #help-btn.tut-locked {
+      pointer-events: none;
+      opacity: 0.5;
+      cursor: not-allowed;
     }
     body.tap-mode .alg-btn:not(#help-btn) { display: none; }
     body.tap-mode #help-btn { display: flex; }
@@ -4292,9 +4349,25 @@
   color: #08121a;
   background: #00ffcc;
   cursor: pointer;
+  /* 表示されたら「ここを押せばいい」がひと目で分かるよう、しっかり脈打たせる。 */
+  animation: tut-next-glow 1.3s ease-in-out infinite;
 }
 #tut-next:active { transform: scale(0.97); }
 #tut-next[hidden] { display: none; }
+@keyframes tut-next-glow {
+  0%, 100% { box-shadow: 0 0 10px rgba(0, 255, 204, 0.5), 0 0 2px rgba(0, 255, 204, 0.6); }
+  50%      { box-shadow: 0 0 34px rgba(0, 255, 204, 1), 0 0 14px rgba(0, 255, 204, 0.85), 0 0 4px #fff; }
+}
+/* 最後の「スタート」だけは赤系にして、それまでの「つぎへ」と見分ける。 */
+#tut-next.tut-final {
+  color: #fff;
+  background: #ff3b3b;
+  animation: tut-next-glow-red 1.3s ease-in-out infinite;
+}
+@keyframes tut-next-glow-red {
+  0%, 100% { box-shadow: 0 0 10px rgba(255, 59, 59, 0.55), 0 0 2px rgba(255, 59, 59, 0.65); }
+  50%      { box-shadow: 0 0 34px rgba(255, 59, 59, 1), 0 0 14px rgba(255, 59, 59, 0.9), 0 0 4px #fff; }
+}
 
 /* 4回まわし切った瞬間の「1周した」フラッシュ。 */
 #tut-card.cheer {
@@ -4318,6 +4391,8 @@
   }
   #tut-hole::after { animation: none; opacity: 0.6; }
   #tut-card { transition: none; }
+  #tut-next { animation: none; box-shadow: 0 0 20px rgba(0, 255, 204, 0.75), 0 0 6px rgba(0, 255, 204, 0.6); }
+  #tut-next.tut-final { animation: none; box-shadow: 0 0 20px rgba(255, 59, 59, 0.75), 0 0 6px rgba(255, 59, 59, 0.6); }
 }
 /* === タップキューブ チュートリアル : CSS ここまで ======================== */
   </style>
@@ -4404,6 +4479,11 @@
         </div>
         <span class="shuffle-slider-hint" aria-hidden="true"></span>
         <div class="shuffle-slider-thumb" id="shuffle-slider-thumb" aria-hidden="true">🔀</div>
+        <!-- チュートリアルがシャッフルの説明に到達するまでは操作できない。
+             .locked のときだけ現れる禁止バッジ。つまみやトラックの見た目は
+             残したまま、その上に小さく重ねるだけにして「まだ触れない」を
+             さりげなく伝える。 -->
+        <span class="shuffle-slider-lock" id="shuffle-slider-lock" aria-hidden="true">🚫</span>
       </div>
     </div>
   </div>
@@ -5303,7 +5383,7 @@
                 "tutSkip": "スキップ",
                 "tutNext": "つぎへ",
                 "tutStart": "はじめる",
-                "tutDone": "はじめる 🎉",
+                "tutDone": "スタート",
                 "tutStep": "ステップ {n} / 4",
                 "tutStepIntro": "Virtual Cube Challenge",
 
@@ -5335,30 +5415,30 @@
                 "tutSwipeH": "横に",
                 "tutSwipeV": "たてに",
                 "tutTurnGo": "同じ向きに、あと{n}回！",
-                "tutTurnLoopFirst": "🎉 <b>ぐるっと1周！</b><br>同じところを4回まわすと、ちゃんと<b>元どおりに戻ります</b>。だから、まちがえても大丈夫。",
-                "tutTurnLoop": "🎉 また元どおり！ 4回で1周、が合いことばです。",
-                "tutTurnWrong": "おっと、いまのは別のところ。もう一度いっしょに 👍",
-                "tutTurnBack": "いまのは逆向きだったみたい。同じ向きでそろえてみよう。",
+                "tutTurnLoopFirst": "ナイス！<b>ぐるっと1周達成</b>🎉<br>バッチリ回せましたね！<br>この調子でどんどん進めていきましょう。",
+                "tutTurnLoop": "🎉 ナイス！バッチリ1周まわせました！",
+                "tutTurnWrong": "おっと、いまのは別のところ。元に戻すね、もう一度いっしょに 👍",
+                "tutTurnBack": "いまのは逆向きだったみたい。元に戻すね、同じ向きでそろえてみよう。",
 
-                "tutViewTitle": "裏側をのぞくには",
-                "tutViewBody": "キューブの<span class=\"tut-em\">外がわ（背景）</span>をなぞると、<b>全体がくるっと回って</b>裏側を見られます。<br>ためしに一度なぞってみて。",
-                "tutViewDone": "見えた！ 面をなぞれば<b>1つの段</b>、背景をなぞれば<b>全体</b>。この2つだけ覚えればOKです。",
+                "tutViewTitle": "裏側を見てみよう",
+                "tutViewBody": "キューブの<span class=\"tut-em\">「外がわ（背景）」</span>をなぞると、<b>全体がくるっと回って</b>裏側が見られます。<br>ためしに一度、背景をなぞってみて。",
+                "tutViewDone": "見えた！🎉<br><br>操作の基本はこの2つだけ！<br>・キューブをなぞる ＝ <b>1段だけ回る</b><br>・背景をなぞる ＝ <b>全体が回る</b>",
 
                 "tutMenuTitle": "メニューを開いてみよう",
-                "tutMenuBody": "右上の <span class=\"tut-em\">≡</span> をタップしてみて。<br>困ったときの入り口はここ、と覚えておけば安心です。",
-                "tutMenuOpenTitle": "中身はこの2つだけ",
-                "tutMenuOpenBody": "🏆 <b>記録</b> … そろえた時間のベストがならびます。💡ヘルプを使った回は<b>別のランキング</b>になるので、気軽に使ってOK！<br>⚙️ <b>設定</b> … 色や見え方、言語をあとから変えられます。",
+                "tutMenuBody": "右上の<span class=\"tut-em\">「≡」</span>をタップしてみてください。<br><br>記録の確認や各種設定は、ここから行えます！",
+                "tutMenuOpenTitle": "中身はこの2つだけ！",
+                "tutMenuOpenBody": "🏆 <b>記録</b> … ベストタイムが確認できます。<br>⚙️ <b>設定</b> … キューブの大きさや回転スピードなどを自由に調整できます。",
 
                 "tutShuffleTitle": "キューブをまぜてみよう",
-                "tutShuffleBody": "≡ の下の <span class=\"tut-em\">🔀</span> のつまみを、<br>① <b>下から上へ</b> 持ち上げて<br>② そのまま <b>少しだけ左へ</b> 倒す。<br><span class=\"tut-em\">L字</span>を描くイメージです。",
-                "tutShuffleArmed": "いいね！ そのまま <span class=\"tut-em\">左へ</span> 倒して！",
-                "tutShuffleDone": "<b>まざりました！</b> ここからタイマーがスタートします。<br>まっすぐなぞる操作はキューブの回転に使うので、シャッフルだけワザと折り返す形にしてあります。うっかり混ざる心配はありません。<br>※ つまみを<b>3秒おさえたまま</b>にすると、そろった状態に戻せます。",
+                "tutShuffleBody": "右側のシャッフルボタン(<span class=\"tut-em\">🔀</span>)を、<br>① <b>上へ持ち上げる</b><br>② そのまま <b>左へスライド</b><br><span class=\"tut-em\">「逆L字」</span>を描くイメージで操作してみよう！",
+                "tutShuffleArmed": "いいね！そのまま<span class=\"tut-em\">「左へ」</span>スライド！",
+                "tutShuffleDone": "準備OK！🎉<br><br>キューブを動かすとタイマーがスタートします。",
 
-                "tutHelpTitle": "迷ったら、ここ 💡",
-                "tutHelpBody": "画面下の <span class=\"tut-em\">💡ヘルプ</span> を押すと、<b>お手本を見ながら1手ずつ</b>そろえられます。<br>使っても記録はちゃんと残るので、遠慮なくどうぞ。",
+                "tutHelpTitle": "迷ったら「💡ヘルプ」",
+                "tutHelpBody": "画面下の<span class=\"tut-em\">「💡ヘルプ」</span>を押すと、<b>お手本を見ながら1手ずつ</b>進められます。<br><br>困ったときは、いつでも使ってみてください！",
                 "tutHelpBodyOff": "いまは 💡ヘルプ を非表示にしています。<br>⚙️設定 の「ヘルプ機能」からいつでも表示に戻せます。",
                 "tutFinishTitle": "チュートリアルはこれで終わり！",
-                "tutFinishBody": "ゆっくりで大丈夫。まずは<b>1面</b>そろえてみよう 🎉"
+                "tutFinishBody": "ゆっくりで大丈夫。<br>まずは<b>「1面」</b>そろえてみよう！"
           },
           "en": {
             "confirmSwitchTitle": "Use {lang}?",
@@ -5577,8 +5657,8 @@
                 "tutTurnGo": "Same direction, {n} more to go!",
                 "tutTurnLoopFirst": "🎉 <b>Full circle!</b><br>Turn the same layer four times and it comes <b>right back to where it started</b>. So you can't break anything.",
                 "tutTurnLoop": "🎉 Back to the start again! Four turns is always one full circle.",
-                "tutTurnWrong": "Oops, that was a different layer. Let's try once more 👍",
-                "tutTurnBack": "That one went the other way. Try keeping the same direction.",
+                "tutTurnWrong": "Oops, that was a different layer. Undoing that — let's try once more 👍",
+                "tutTurnBack": "That one went the other way. Undoing that — try keeping the same direction.",
 
                 "tutViewTitle": "Peeking at the back",
                 "tutViewBody": "Swipe the <span class=\"tut-em\">background</span> around the cube and the <b>whole cube spins</b>, so you can see the far side.<br>Give it a try.",
@@ -7561,6 +7641,14 @@
 
     let menuIdleTimer = null;
     function setMenuOpen(open) {
+      // チュートリアルがこのドロワーの中身を説明している最中(holdMenu)は、
+      // 自動タイムアウトだけでなく ≡ の再タップや外側タップによる
+      // 手動クローズも受け付けない。ここで閉じさせてしまうと、
+      // #menu-actions は visibility:hidden の間も箱の大きさを保持し続ける
+      // ため、スポットライトの穴だけが中身の消えた位置に取り残されて
+      // 見えてしまう(閉じ役は holdMenu が外れた瞬間に tutGoTo 側が担う)。
+      const tutHolding = window.__tut && window.__tut.active && window.__tut.holdMenu;
+      if (!open && tutHolding) return;
       menuActions.classList.toggle('open', open);
       menuToggle.classList.toggle('open', open);
       menuToggle.setAttribute('aria-expanded', String(open));
@@ -7570,7 +7658,6 @@
       // ただしチュートリアルでドロワーの中身を説明している最中だけは別。
       // 6秒の自動クローズが説明の途中で走ると、読んでいる本人には
       // 「勝手に閉じた＝操作をまちがえた」としか見えない。
-      const tutHolding = window.__tut && window.__tut.active && window.__tut.holdMenu;
       if (open && !tutHolding) menuIdleTimer = setTimeout(() => setMenuOpen(false), 6000);
     }
     onI18n(() => setMenuOpen(menuActions.classList.contains('open')));
@@ -7590,6 +7677,12 @@
     // sitting open while you go back to turning the cube.
     function menuAction(btn, fn) {
       btn.addEventListener('click', () => {
+        // チュートリアルの「記録/設定」説明中はボタンを効かせない
+        // (CSS の pointer-events:none が主だが、二重の安全策として)。
+        if (window.__tut && window.__tut.active && typeof tutStepDef === 'function') {
+          const st = tutStepDef();
+          if (st && st.id === 'menuOpen') return;
+        }
         setMenuOpen(false);
         fn();
       });
@@ -7616,6 +7709,28 @@
     let shuffleMaxDrag = 0;
     let shuffleArmed = false;
     let shuffleFired = false;        // 1回のドラッグで二重に発火させない
+
+    // --- チュートリアル未到達のあいだのロック -----------------------------
+    // 「シャッフルしてみよう」のステップに来るまでは操作不可にする。
+    // CSS の pointer-events:none で見た目・操作の両方を止めつつ、
+    // pointerdown/keydown 側でも早期リターンして二重に防ぐ
+    // (将来 pointer-events 以外の経路が増えても壊れないように)。
+    let shuffleLocked = false;
+    function setShuffleLocked(locked) {
+      locked = !!locked;
+      if (shuffleLocked === locked) return;
+      shuffleLocked = locked;
+      shuffleSlider.classList.toggle('locked', locked);
+      shuffleSlider.setAttribute('aria-disabled', locked ? 'true' : 'false');
+      shuffleSlider.tabIndex = locked ? -1 : 0;
+      if (locked) {
+        // ロックした瞬間にドラッグ中だった場合は後始末して閉じる。
+        shuffleDragging = false;
+        clearShuffleLongPress();
+        resetShuffleThumb();
+      }
+    }
+    window.__setShuffleLocked = setShuffleLocked;
 
     function shuffleTrackRange() {
       return Math.max(0, shuffleSlider.clientHeight - SHUFFLE_THUMB_SIZE - SHUFFLE_EDGE * 2);
@@ -7719,6 +7834,7 @@
     }
 
     shuffleSlider.addEventListener('pointerdown', (e) => {
+      if (shuffleLocked) return;
       shuffleDragging = true;
       shuffleFired = false;
       shuffleMaxDrag = shuffleTrackRange();
@@ -7787,6 +7903,7 @@
     // キーボードやスイッチ操作はドラッグという曖昧さがそもそも無い、
     // はっきりした意図表明なので、そのまま実行してよい(長押しの出番はない)。
     shuffleSlider.addEventListener('keydown', (e) => {
+      if (shuffleLocked) return;
       if (e.key === 'Enter' || e.key === ' ') {
         e.preventDefault();
         runShuffle();
@@ -8755,13 +8872,18 @@
     const tutBody   = document.getElementById('tut-body');
     const tutGuide  = document.getElementById('tut-guide');
     const tutDots   = document.getElementById('tut-dots');
+    // 「記録/設定」説明中にキューブを触れなくするためのロック対象。
+    const tutCanvasContainer = document.getElementById('canvas-container');
     const tutSkip   = document.getElementById('tut-skip');
     const tutNext   = document.getElementById('tut-next');
     const openTutorialBtn = document.getElementById('open-tutorial-btn');
 
     // window 経由で持つのは、gameState / makeTurn が init3D() の中の
     // ローカル変数で、こちらのスコープから直接は触れないため。
-    window.__tut = { active: false, holdMenu: false };
+    // viewAllowed: 「背景をなぞって持ち替える」がすでに習った操作かどうか。
+    // view ステップに着くより前は false にしておき、持ち替えられても
+    // cube-view-rotated を発火させず、キューブ側でもとの向きへ戻す。
+    window.__tut = { active: false, holdMenu: false, viewAllowed: true };
 
     // キューブのローカル座標。ステッカー面は 1.47 (=1 + 0.94/2) の位置。
     const TUT_FACE = 1.47;
@@ -8811,6 +8933,16 @@
       { id: 'finish', phase: 4, mode: 'card',
         titleKey: 'tutFinishTitle', bodyKey: 'tutFinishBody', nextKey: 'tutDone' }
     ];
+
+    // シャッフルは「キューブをまぜてみよう」のステップに来るまで操作不可。
+    // それより前で本人の手で混ぜられてしまうと、直前の「そろった面で
+    // 4回まわすと戻る」等の説明と噛み合わなくなるため。
+    const TUT_SHUFFLE_INDEX = TUT_STEPS.findIndex(s => s.id === 'shuffle');
+    function tutSyncShuffleLock() {
+      if (typeof window.__setShuffleLocked !== 'function') return;
+      const locked = window.__tut.active && tutIndex < TUT_SHUFFLE_INDEX;
+      window.__setShuffleLocked(locked);
+    }
 
     let tutIndex = -1;
     let tutTurnCount = 0;
@@ -9042,9 +9174,13 @@
       if (!st || st.mode !== 'turn') { tutDots.classList.remove('on'); return; }
       tutDots.classList.add('on');
       tutDots.innerHTML = '';
+      // 4の倍数(4,8,12…)はちょうど1周そろった状態なので4個とも点灯。
+      // それ以外は「今の周で何回回したか」を mod で出す。
+      const filled = tutTurnCount === 0 ? 0
+        : (tutTurnCount % 4 === 0 ? 4 : tutTurnCount % 4);
       for (let i = 0; i < 4; i++) {
         const d = document.createElement('i');
-        if (i < tutTurnCount) d.classList.add('done');
+        if (i < filled) d.classList.add('done');
         tutDots.appendChild(d);
       }
     }
@@ -9060,6 +9196,10 @@
       const showNext = !!o.nextKey;
       tutNext.hidden = !showNext;
       if (showNext) tutNext.textContent = t(o.nextKey);
+      // 最後の「スタート」だけは押す意味が違う(説明の続きではなく、
+      // ここから実際に始める合図)ので、色を変えて他の「つぎへ」と
+      // 見分けられるようにする。
+      tutNext.classList.toggle('tut-final', o.nextKey === 'tutDone');
       tutSkip.textContent = t('tutSkip');
       tutPaintDots();
     }
@@ -9084,6 +9224,7 @@
     function tutGoTo(i) {
       tutTeardownWatchers();
       tutIndex = i;
+      tutSyncShuffleLock();
       if (tutIndex >= TUT_STEPS.length) { finishTutorial(true); return; }
 
       const st = tutStepDef();
@@ -9091,7 +9232,32 @@
       tutTurnDir = null;
       tutFace = null;
       tutSetGuide('');
+      // holdMenu が外れる瞬間(=ドロワーの説明ステップを離れる瞬間)は、
+      // setMenuOpen 側のガードが効く前にこちらで明示的に閉じる。
+      // 「外側タップで閉じる」に任せていた分をここで肩代わりする形。
+      const prevHoldMenu = window.__tut.holdMenu;
       window.__tut.holdMenu = !!st.holdMenu;
+      if (prevHoldMenu && !window.__tut.holdMenu && menuActions.classList.contains('open')) {
+        setMenuOpen(false);
+      }
+      // 「裏側をのぞく」(view) ステップに到達して以降は持ち替えを許可。
+      // それより前の U/R/F/L/D などのステップでは、持ち替えても
+      // cube-view-rotated を発火させず自動で向きを戻す。
+      window.__tut.viewAllowed = tutIndex >= TUT_STEPS.findIndex(s => s.id === 'view');
+
+      // 「記録/設定」の説明中(menuOpen)は、キューブにもドロワー内の
+      // ボタンにも触れさせない。ここで触れて局面やオーバーレイの状態が
+      // 変わってしまうと、保持中のドロワーや後続ステップと噛み合わなく
+      // なるため。
+      const explainLocked = st.id === 'menuOpen';
+      if (tutCanvasContainer) tutCanvasContainer.classList.toggle('tut-locked', explainLocked);
+      menuActions.classList.toggle('tut-explain-lock', explainLocked);
+
+      // 「ヘルプ」ボタンの説明中は、ボタン自体を押せなくする。
+      // 押せてしまうとお手本デモが始まり、保持しているカードや
+      // スポットライトと噛み合わなくなるため。
+      const helpBtnEl = document.getElementById('help-btn');
+      if (helpBtnEl) helpBtnEl.classList.toggle('tut-locked', st.id === 'help');
 
       // レイヤーの出し分け。キューブを触らせるステップでは幕を張らない
       // （暗くすると、いま何がどう回ったのかが見えなくなる）。
@@ -9166,34 +9332,47 @@
       if (!window.__tut.active || !st || st.mode !== 'turn') return;
       const d = e.detail;
 
-      // 別の段を回してしまったとき。責めずに、目標はそのままで数え直す。
+      // 別の段を回してしまったとき。責めるのではなく、その手だけを
+      // アニメーションでそのまま元に戻す。戻せば対象の段は触れて
+      // いないのと同じ状態に戻るので、それまでの回転数はそのまま
+      // 活かして、正しい対象をもう一度示す。
       if (d.axis !== st.axis || d.layer !== st.layer) {
-        tutTurnCount = 0;
-        tutTurnDir = null;
+        if (window.tutCubeBridge && typeof window.tutCubeBridge.undoTurn === 'function') {
+          window.tutCubeBridge.undoTurn(d.axis, d.layer, d.dir);
+        }
         tutFlash('tutTurnWrong');
-        tutPaintDots();
         return;
       }
-      // 向きが変わったら、そこから新しい1回目として数え直す。
-      // 逆回しを混ぜると1周にならないので、ここは厳密に見る。
+      // 向きを間違えたときも同様に、いま回した分だけをアニメーションで
+      // 元に戻す。カウントも直前の向きも崩さずそのまま残すので、
+      // 「なかったことにして、もう一度同じ向きへ」がそのまま成立する。
       if (tutTurnDir !== null && d.dir !== tutTurnDir) {
-        tutTurnCount = 1;
-        tutTurnDir = d.dir;
+        if (window.tutCubeBridge && typeof window.tutCubeBridge.undoTurn === 'function') {
+          window.tutCubeBridge.undoTurn(d.axis, d.layer, d.dir);
+        }
         tutFlash('tutTurnBack');
-        tutPaintDots();
         return;
       }
       tutTurnDir = d.dir;
       tutTurnCount++;
       tutPaintDots();
 
-      if (tutTurnCount >= 4) {
+      // 4回でちょうど1周して面はそろうが、遅延演出(tutAdvance)が
+      // 終わるまでの間に本人がさらに同じ向きへ回し続けることがある。
+      // 5回目は90°ぶんそろっていない状態なので、tutTurnCount>=4を
+      // 使い続けるとそこでも「そろった」と誤って案内してしまう。
+      // 4の倍数に達した瞬間だけが実際にそろった状態なので、そこだけを
+      // 「完了」として扱い、常にそろった面でステップを進める。
+      const loopsDone = tutTurnCount % 4 === 0;
+      if (loopsDone) {
         tutCheer();
         tutFlash(tutLoopSeen ? 'tutTurnLoop' : 'tutTurnLoopFirst');
         tutLoopSeen = true;
-        tutAdvance(tutLoopSeen && tutIndex > 1 ? 1500 : 2600);
+        // 自動で次へ進めず、本人がメッセージを読んでタップするまで待つ。
+        tutNext.hidden = false;
+        tutNext.textContent = t('tutNext');
       } else {
-        tutFlash('tutTurnGo', { n: 4 - tutTurnCount });
+        tutFlash('tutTurnGo', { n: 4 - (tutTurnCount % 4) });
       }
     });
 
@@ -9202,7 +9381,9 @@
       if (!window.__tut.active || !st || st.mode !== 'view') return;
       tutCheer();
       tutFlash('tutViewDone');
-      tutAdvance(2400);
+      // 自動で次へ進めず、本人がメッセージを読んでタップするまで待つ。
+      tutNext.hidden = false;
+      tutNext.textContent = t('tutNext');
     });
 
     window.addEventListener('cube-scrambled', () => {
@@ -9243,11 +9424,17 @@
       tutTeardownWatchers();
       window.__tut.active = false;
       window.__tut.holdMenu = false;
+      window.__tut.viewAllowed = true;
       tutIndex = -1;
+      tutSyncShuffleLock();
       if (tutRAF) { cancelAnimationFrame(tutRAF); tutRAF = null; }
       tutFace = null;
       tutSetGuide('');
       tutRoot.classList.remove('show', 'spotlight', 'has-hole', 'has-ghost', 'card-top', 'tut-hidden');
+      if (tutCanvasContainer) tutCanvasContainer.classList.remove('tut-locked');
+      menuActions.classList.remove('tut-explain-lock');
+      const helpBtnElDone = document.getElementById('help-btn');
+      if (helpBtnElDone) helpBtnElDone.classList.remove('tut-locked');
       if (typeof setMenuOpen === 'function') setMenuOpen(false);
       tutSaveProgress(true);
       // シャッフルまで到達せずに抜けた場合は、ここで混ぜて通常の
@@ -9264,7 +9451,14 @@
       if (st && st.id === 'finish') { finishTutorial(true); return; }
       tutAdvance();
     });
-    tutSkip.addEventListener('click', () => { finishTutorial(false); });
+    // 「スキップ」は全体を抜けるのではなく、いまのステップだけ1つぶん
+    // 読み飛ばす。最後のステップ(finish)にいるときだけ、次が無いので
+    // ここでチュートリアル自体を終える。
+    tutSkip.addEventListener('click', () => {
+      const st = tutStepDef();
+      if (st && st.id === 'finish') { finishTutorial(false); return; }
+      tutAdvance();
+    });
 
     if (openTutorialBtn) {
       openTutorialBtn.addEventListener('click', () => {
@@ -9703,8 +9897,19 @@
           requestAnimationFrame(animateSnap);
         } else {
           cubeGroup.quaternion.copy(endQuaternion);
-          isSnapping = false;
           syncButtonColors();
+          // チュートリアルで「背景をなぞって持ち替える」をまだ教えていない
+          // 段階（＝裏側をのぞくステップより前）で持ち替えられたときは、
+          // 教えていないジェスチャーを勝手に成立させず、いま回した分だけ
+          // アニメーションでもとの向きへ戻す。isSnapping は戻り終わるまで
+          // true のままにして、途中で次の持ち替えが割り込まないようにする。
+          if (window.__tut && window.__tut.active && !window.__tut.viewAllowed &&
+              Math.abs(snappedAngle) > 0.01) {
+            tutRevertView(endQuaternion, dragBaseQuaternion.clone());
+            dragAxis = null;
+            return;
+          }
+          isSnapping = false;
           // 「背景をなぞると全体が回る」を体験させるステップ用。
           // 90°スナップが終わってから通知するので、途中の中途半端な
           // 角度でガイドが次へ進んでしまうことがない。
@@ -9715,6 +9920,27 @@
       }
       requestAnimationFrame(animateSnap);
       dragAxis = null;
+    }
+
+    // チュートリアルの「裏側をのぞく」ステップより前に持ち替えられたときの
+    // 引き戻しアニメーション。onDragEnd の 90°スナップと同じ緩急・時間を
+    // 使い、戻り終わったら isSnapping を解除してふつうの操作に戻す。
+    function tutRevertView(fromQuaternion, toQuaternion) {
+      const duration = turnDuration();
+      const t0 = performance.now();
+      function animateRevert(now) {
+        const p = Math.min((now - t0) / duration, 1);
+        const ease = 1 - Math.pow(1 - p, 3);
+        cubeGroup.quaternion.copy(fromQuaternion).slerp(toQuaternion, ease);
+        if (p < 1) {
+          requestAnimationFrame(animateRevert);
+        } else {
+          cubeGroup.quaternion.copy(toQuaternion);
+          isSnapping = false;
+          syncButtonColors();
+        }
+      }
+      requestAnimationFrame(animateRevert);
     }
 
     // Only one finger may drive a grab/drag gesture at a time. Without this,
@@ -9730,6 +9956,12 @@
 
     renderer.domElement.addEventListener('pointerdown', (e) => {
       if (activePointerId !== null) return;   // a gesture is already in progress
+      // チュートリアルの「記録/設定」説明中はキューブに触れさせない
+      // (CSS の pointer-events:none が主だが、二重の安全策として)。
+      if (window.__tut && window.__tut.active && typeof tutStepDef === 'function') {
+        const st = tutStepDef();
+        if (st && st.id === 'menuOpen') return;
+      }
       activePointerId = e.pointerId;
       renderer.domElement.setPointerCapture(e.pointerId);
       // Try to grab a sticker first. Only if that misses (background) does the
@@ -12210,6 +12442,15 @@ const ZBLL_DATA = [
           return [best.x, best.y, best.z];
         } catch (err) { return null; }
       },
+      // 間違えて回してしまった1手を、アニメーションつきでそのまま
+      // 元に戻す。makeTurn() はアニメーション中でも呼べば
+      // moveQueue に積まれるので、いま回っている最中の手が
+      // 終わり次第、逆向きの手が続けて再生される
+      // （「回った → すぐ戻った」がひと続きの動きに見える）。
+      undoTurn: function (axis, layer, dir) {
+        if (typeof makeTurn !== 'function') return;
+        makeTurn({ axis: axis, layers: [layer], dir: -dir });
+      },
       isBusy: function () { return isAnimating || isSnapping; }
     };
     window.dispatchEvent(new Event('cube-help-ready'));
@@ -13073,7 +13314,16 @@ const ZBLL_DATA = [
         });
       }
 
-      btn.addEventListener('click', () => { st.on ? stop() : start(); });
+      btn.addEventListener('click', () => {
+        // チュートリアルがこのボタン自体を説明している間は押させない。
+        // ここで開始してしまうと、保持中のスポットライトやカードと
+        // 噛み合わなくなるため。
+        if (window.__tut && window.__tut.active && typeof tutStepDef === 'function') {
+          const tutSt = tutStepDef();
+          if (tutSt && tutSt.id === 'help') return;
+        }
+        st.on ? stop() : start();
+      });
       closeEl.addEventListener('click', stop);
       window.addEventListener('tap-mode-change', () => {
         if (st.on && !document.body.classList.contains('tap-mode')) stop();
