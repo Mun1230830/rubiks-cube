@@ -6013,7 +6013,7 @@ const ZBLL_DATA = [
         // ★報酬の入口はこの1か所だけ。
         //   ① 水色シャード +100（自己記録更新のときだけ+150。ガイドあり／
         //      なしはそれぞれ別のベストと比較済み＝isNewBestに反映済み）
-        //   ② 虹色シャード +10,000（50%抽選 → 当たれば大当たり確定演出）
+        //   ② 虹色シャード +10,000（3%抽選 → 当たれば大当たり確定演出）
         //   抽選も保存も演出も handleClearReward() の中で完結します。
         if (window.handleClearReward && gameState === 'solved') {
           handleClearReward({
@@ -8333,7 +8333,7 @@ const REWARD = {
                              //    「どちらの区分であっても、その区分の
                              //    自己ベストを更新したら150」で自動的に
                              //    両方に効く。ここで区分ごとに分ける必要はない。
-  JACKPOT_RATE:   0.5,     // ② 大当たりの確率（0.5 = 50%）
+  JACKPOT_RATE:   0.03,    // ② 大当たりの確率（0.03 = 3%）
   JACKPOT_AMOUNT: 10000    //    当たったときの虹色シャード
 };
 
@@ -8390,7 +8390,7 @@ CrystalReward.setIconFactory(function () {
 function handleClearReward(opts) {
   opts = opts || {};
 
-  /* ---- ② 大当たり抽選（50%）------------------------------------------ */
+  /* ---- ② 大当たり抽選（3%）------------------------------------------- */
   const jackpot = (Math.random() < REWARD.JACKPOT_RATE);
   const result = {
     cyan:    opts.isNewBest ? REWARD.CYAN_NEW_BEST : REWARD.CYAN_PER_CLEAR,
