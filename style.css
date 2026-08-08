@@ -1056,17 +1056,17 @@
       margin-bottom: 8px;
     }
     #layout-overlay .settings-toggle-row {
-      margin-bottom: 4px;
+      margin-bottom: 10px;
     }
     #layout-overlay .settings-hint {
-      margin-bottom: 8px;
+      margin-bottom: 18px;
     }
     #layout-overlay .help-visibility-grid {
-      margin: 2px 0 8px;
+      margin: 4px 0 20px;
     }
     #layout-overlay .alg-visibility-grid {
       gap: 8px;
-      margin: 0 0 12px;
+      margin: 4px 0 20px;
     }
     #layout-overlay .alg-vis-btn {
       height: 46px;
