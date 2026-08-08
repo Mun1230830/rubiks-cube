@@ -3650,7 +3650,9 @@
   transform-origin: 0 50%;
   background: linear-gradient(90deg, rgba(140,238,255,.85), rgba(95,227,255,0));
   opacity: 0;
-  will-change: transform, opacity;
+  /* will-change は外した。親の .crystal-shard が既に合成レイヤーなので、
+     残光まで個別レイヤーに昇格させると 13個 × 2枚ぶんの GPU メモリを
+     食うだけで、描画は速くならない。 */
 }
 .crystal-shard-glow {
   position: absolute;
@@ -3666,7 +3668,11 @@
   display: grid;
   place-items: center;
   animation: crystal-tumble .8s linear infinite;
-  transform-style: preserve-3d;
+  /* transform-style:preserve-3d は外した。中身は平らな SVG 1枚だけなので
+     3D レンダリングコンテキストを作る意味がなく、回転のたびに子要素を
+     3D 空間で解決し直すぶんだけ重くなっていた。rotate3d 自体は
+     preserve-3d 無しでも同じ見た目で回る。 */
+  will-change: transform;
 }
 @keyframes crystal-tumble {
   0%   { transform: rotate3d(.4, 1, .2, 0deg); }
@@ -3685,7 +3691,10 @@
   width: 100%;
   height: 100%;
   display: block;
-  filter: drop-shadow(0 0 5px rgba(95,227,255,.55));
+  /* ★ここが一番重かった。filter は「合成だけで済ませる」道を塞ぐので、
+     回転しながら飛ぶ 13個ぶんが毎フレーム再ラスタライズされていた。
+     光り方は背面の .crystal-shard-glow (ただの radial-gradient) が
+     受け持っているので、見た目はほぼ変わらないまま負荷だけ落ちる。 */
 }
 /* 絵文字モード（CrystalReward.setIconFactory 未使用でも切替できる簡易版） */
 .crystal-gem-emoji {
@@ -3818,13 +3827,24 @@
   isolation:isolate;                /* ::before/::after を内側に閉じ込める */
   transform:translateZ(0);
   will-change:transform;
-  transition:min-width .18s ease; /* 桁数変化でも滑らかに幅が追従 */
+  /* ★ transition:min-width は効いていなかった（min-width は固定値のまま
+     で、実際に伸び縮みしていたのは width:max-content 側）。それどころか
+     カウントアップ中は数字が毎フレーム書き換わるため、このピルの幅も
+     毎フレーム変わり、#header (display:flex / flex-wrap:wrap) がまるごと
+     組み直しになっていた。幅は JS が最終値ぶんを先に確保するので、
+     ここでは何も遷移させない。 */
 }
 .wallet-pill .pill-icon{ width:15px; height:19px; display:block; flex:0 0 auto; }
 .wallet-pill .pill-num{
   font-family:"Orbitron", ui-monospace, "SF Mono", monospace;
   font-size:15px; font-weight:900; line-height:1;
   letter-spacing:.04em; font-variant-numeric:tabular-nums;
+  /* 桁数が増えても箱の幅が変わらないようにする。tabular-nums と併せて、
+     0 → 100 と数字が流れてもレイアウトはぴくりとも動かない。
+     実際に必要な幅は JS (reserveCounterWidth) が ch 単位で入れ直す。 */
+  display:inline-block;
+  min-width:3ch;
+  text-align:right;
 }
 
 /* ---- 下段：水色（静かな単色グロー）---- */
@@ -4086,7 +4106,7 @@
   width:54px; height:6px; margin-top:-3px; border-radius:3px;
   transform-origin:0 50%;
   background:linear-gradient(90deg, rgba(255,240,200,.9), rgba(255,180,240,0));
-  opacity:0; will-change:transform,opacity;
+  opacity:0;   /* will-change は親レイヤーに任せる（.crystal-shard-trail と同じ理由）*/
 }
 .jp-shard-glow{
   position:absolute; left:50%; top:50%;
@@ -4095,13 +4115,14 @@
 }
 .jp-shard-tumble{
   position:absolute; inset:0; display:grid; place-items:center;
-  animation:jp-tumble .7s linear infinite; transform-style:preserve-3d;
+  animation:jp-tumble .7s linear infinite; will-change:transform;
 }
 @keyframes jp-tumble{
   0%{ transform:rotate3d(.35,1,.25,0deg) } 100%{ transform:rotate3d(.35,1,.25,360deg) }
 }
-.jp-shard svg{ width:21px; height:27px; display:block;
-  filter:drop-shadow(0 0 6px rgba(255,215,160,.8)); }
+/* 水色シャードと同じ理由で、preserve-3d と drop-shadow を外している。
+   こちらは 72個も飛ぶので効き方はさらに大きい（光は .jp-shard-glow 担当）。*/
+.jp-shard svg{ width:21px; height:27px; display:block; }
 
 /* 水色シャード（通常演出）を、ヘッダーと同じ結晶の形に揃えるための追加。
    CrystalReward.setIconFactory() で差し込みます。 */
@@ -13530,6 +13551,22 @@ const CrystalReward = (function () {
   const rand = (a, b) => a + Math.random() * (b - a);
   const fmt  = (v) => v.toLocaleString('en-US');
 
+  /* ---- カウンターの幅を先に確保する ------------------------------------
+     数字は 0 → 100 と毎フレーム書き換わる。ヘッダーのピルは
+     width:max-content なので、桁が増えるたびにピルの幅が変わり、
+     #header (display:flex / flex-wrap:wrap) が丸ごと組み直しになる。
+     その再レイアウトはページ全体に波及するため、画面下の #controls
+     ―― つまり💡ヘルプボタン ―― まで 1px 単位で上下に震えていた。
+     アニメを始める前に「最終的に必要な桁数ぶん」の幅を入れておけば、
+     カウント中はレイアウトが一度も動かない。 */
+  function reserveCounterWidth(el, text) {
+    if (!el) return;
+    const ch = Math.max(3, String(text).length);
+    if (el._reservedCh === ch) return;      // 変化なしなら書き込まない
+    el.style.minWidth = ch + 'ch';
+    el._reservedCh = ch;
+  }
+
   /* ---- DOM の用意 ------------------------------------------------------ */
   function ensureDom() {
     walletEl      = walletEl      || document.getElementById('crystal-wallet');
@@ -13557,15 +13594,20 @@ const CrystalReward = (function () {
      を呼べば .crystal-gem の代わりに好きな要素を飛ばせます。
      （殻・残光・にじみ・回転はそのまま再利用されます）
      -------------------------------------------------------------------- */
+  let defaultIconUid = 0;
   function defaultIcon() {
+    // グラデーションの id は1個ずつ変える。同じ id を13個ばらまくと
+    // どの結晶も最初の1個の defs を参照することになり(HTML的にも不正)、
+    // 差し替え時に色が壊れる原因になる。
+    const gid = 'crystalGemGrad-shard-' + (defaultIconUid++);
     const gem = document.createElement('div');
     gem.className = 'crystal-gem';
     gem.innerHTML =
       '<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">' +
-        '<defs><linearGradient id="crystalGemGrad-shard" x1="0" y1="0" x2="1" y2="1">' +
+        '<defs><linearGradient id="' + gid + '" x1="0" y1="0" x2="1" y2="1">' +
           '<stop offset="0" stop-color="#eafcff"/><stop offset="1" stop-color="#6ad9f0"/>' +
         '</linearGradient></defs>' +
-        '<polygon points="32,7 57,21 32,35 7,21" fill="url(#crystalGemGrad-shard)"/>' +
+        '<polygon points="32,7 57,21 32,35 7,21" fill="url(#' + gid + ')"/>' +
         '<polygon points="7,21 32,35 32,59 7,45" fill="#2b86ad"/>' +
         '<polygon points="57,21 32,35 32,59 57,45" fill="#14547a"/>' +
         '<g stroke="#0b2c40" stroke-width="1.4" opacity=".5">' +
@@ -13622,13 +13664,37 @@ const CrystalReward = (function () {
   }
 
   /* ---- ヘッダーUIの反応 ------------------------------------------------ */
+  let pulseSeq = 0, lastTickAt = 0;
   function pulseWallet(kind) {
     if (!walletEl) return;
+
+    // 到達は staggerMs=26ms 間隔で来るので、素直に毎回張り替えると 0.2秒の
+    // アニメが再生される前に 8回も潰し合う。見た目は変わらないのに負荷だけ
+    // 増えるので、tick は 90ms に1回までに間引く（hit は必ず出す）。
+    const now = performance.now();
+    if (kind !== 'hit') {
+      if (now - lastTickAt < 90) return;
+      lastTickAt = now;
+    }
+
     const cls = kind === 'hit' ? 'is-hit' : 'is-tick';
+    const seq = ++pulseSeq;
     walletEl.classList.remove('is-hit', 'is-tick');
-    void walletEl.offsetWidth;
-    walletEl.classList.add(cls);
-    setTimeout(() => walletEl.classList.remove(cls), kind === 'hit' ? 560 : 220);
+
+    // ★ここが強制同期レイアウトの発生源だった。
+    //   void walletEl.offsetWidth は「アニメを頭から再生させる」ための
+    //   常套手段だが、直前まで rAF ループが transform を書きまくっている
+    //   最中に読むと、その場でページ全体のレイアウトを確定させてしまう
+    //   (read-after-write = layout thrashing)。しかも到達のたびに走る。
+    //   1フレーム挟んでクラスを付け直せば、レイアウトを一切読まずに
+    //   同じ「再生し直し」が得られる。
+    requestAnimationFrame(() => {
+      if (seq !== pulseSeq || !walletEl) return;
+      walletEl.classList.add(cls);
+      setTimeout(() => {
+        if (seq === pulseSeq && walletEl) walletEl.classList.remove(cls);
+      }, kind === 'hit' ? 560 : 220);
+    });
   }
   function spawnRing(isFinal) {
     if (!walletEl) return;
@@ -13644,6 +13710,7 @@ const CrystalReward = (function () {
   function rollUpCounter(el, from, to, duration, onDone) {
     const d = duration || 700;
     const t0 = performance.now();
+    reserveCounterWidth(el, fmt(Math.max(Math.abs(from), Math.abs(to))));
     if (el) el.classList.add('is-rolling');
     (function step(now) {
       const p = Math.min((now - t0) / d, 1);
@@ -13680,6 +13747,10 @@ const CrystalReward = (function () {
     const to   = balance + amount;
     balance = to;
     onCompleteCb = opts.onComplete || null;
+
+    // 演出が始まる前に、最終値ぶんの桁幅を確保しておく（ヘッダーの
+    // 組み直し＝画面全体の再レイアウトを1回で終わらせるため）。
+    reserveCounterWidth(countEl, fmt(to));
 
     showPopup(amount, opts.popupAnchor);
 
@@ -13742,6 +13813,7 @@ const CrystalReward = (function () {
         flyMs: rand(CONFIG.flyMsMin, CONFIG.flyMsMax),
         phase: Math.random() * 6.28,
         px: ox, py: oy,
+        trailT: '', trailO: '0',   // 直前に書いた残光の値（無駄書き防止）
         share: amount / n,
         done: false
       });
@@ -13795,15 +13867,19 @@ const CrystalReward = (function () {
         'translate3d(' + x.toFixed(2) + 'px,' + y.toFixed(2) + 'px,0) scale(' + scale.toFixed(3) + ')';
       if (alpha !== 1) s.el.style.opacity = alpha.toFixed(2);
 
-      // 残光は「前フレームからの移動量」で長さと向きを決める
+      // 残光は「前フレームからの移動量」で長さと向きを決める。
+      // 同じ値の書き戻しでもスタイル再計算は走るので、変わったときだけ書く。
       const mvx = x - s.px, mvy = y - s.py;
       const speed = Math.hypot(mvx, mvy);
       if (speed > 1.5) {
         const deg = Math.atan2(mvy, mvx) * 180 / Math.PI + 180;
-        s.trail.style.transform = 'rotate(' + deg.toFixed(1) + 'deg) scaleX(' + Math.min(speed / 7, 4.5).toFixed(2) + ')';
-        s.trail.style.opacity = Math.min(speed / 26, 0.85).toFixed(2);
-      } else if (s.trail.style.opacity !== '0') {
+        const tr = 'rotate(' + deg.toFixed(1) + 'deg) scaleX(' + Math.min(speed / 7, 4.5).toFixed(2) + ')';
+        const op = Math.min(speed / 26, 0.85).toFixed(2);
+        if (tr !== s.trailT) { s.trail.style.transform = tr; s.trailT = tr; }
+        if (op !== s.trailO) { s.trail.style.opacity = op; s.trailO = op; }
+      } else if (s.trailO !== '0') {
         s.trail.style.opacity = '0';
+        s.trailO = '0';
       }
       s.px = x; s.py = y;
     }
@@ -13879,7 +13955,7 @@ const CrystalReward = (function () {
     const from = balance;
     balance = v;
     if (animate && countEl) rollUpCounter(countEl, from, v, 450);
-    else if (countEl) countEl.textContent = fmt(v);
+    else if (countEl) { reserveCounterWidth(countEl, fmt(v)); countEl.textContent = fmt(v); }
     lastRendered = displayValue = targetValue = v;
   }
   function getBalance() { ensureDom(); return balance; }
@@ -13957,6 +14033,17 @@ const ShardJackpot = (function () {
   const fmt  = (v) => v.toLocaleString('en-US');
   const reduced = () =>
     window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  /* 0 → 10,000 は桁が 1 から 6 まで動く。先に幅を確保しておかないと、
+     ロールアップ中ずっとヘッダーが組み直され、画面下まで揺れる。
+     （CrystalReward 側の reserveCounterWidth と同じ考え方） */
+  function reserveCounterWidth(el, text) {
+    if (!el) return;
+    const ch = Math.max(3, String(text).length);
+    if (el._reservedCh === ch) return;
+    el.style.minWidth = ch + 'ch';
+    el._reservedCh = ch;
+  }
 
   const later = (fn, ms) => { timers.push(setTimeout(fn, ms)); };
   const clearTimers = () => { timers.forEach(clearTimeout); timers = []; };
@@ -14088,13 +14175,26 @@ const ShardJackpot = (function () {
   }
 
   /* ---- ヘッダーUIの反応 -------------------------------------------------- */
+  let pulseSeq2 = 0, lastTick2At = 0;
   function pulsePill(kind) {
     if (!pillEl) return;
+    // CrystalReward.pulseWallet と同じ対策。
+    // ・tick は間引く（72個ぶん張り替えると再生前に潰し合うだけ）
+    // ・offsetWidth を読まない（rAF ループ中の強制同期レイアウトを避ける）
+    const now = performance.now();
+    if (kind !== 'hit') {
+      if (now - lastTick2At < 90) return;
+      lastTick2At = now;
+    }
     const cls = kind === 'hit' ? 'is-hit2' : 'is-tick2';
+    const seq = ++pulseSeq2;
     pillEl.classList.remove('is-hit2', 'is-tick2');
-    void pillEl.offsetWidth;
-    pillEl.classList.add(cls);
-    later(() => pillEl.classList.remove(cls), kind === 'hit' ? 620 : 220);
+    requestAnimationFrame(() => {
+      if (seq !== pulseSeq2 || !pillEl) return;
+      pillEl.classList.add(cls);
+      later(() => { if (seq === pulseSeq2 && pillEl) pillEl.classList.remove(cls); },
+            kind === 'hit' ? 620 : 220);
+    });
   }
   function spawnRing(isFinal) {
     if (!pillEl) return;
@@ -14119,6 +14219,7 @@ const ShardJackpot = (function () {
     onCompleteCb = opts.onComplete || null;
     rollStarted = false;
     arrived = 0;
+    reserveCounterWidth(countEl, fmt(balance));
 
     /* モーション軽減／裏タブ：数字だけ気持ちよく伸ばして終わる */
     if (reduced() || document.hidden || !pillEl || !countEl) {
@@ -14312,6 +14413,7 @@ const ShardJackpot = (function () {
   function rollUpCounter(el, from, to, duration, onDone) {
     const d = duration || 900;
     const t0 = performance.now();
+    reserveCounterWidth(el, fmt(Math.max(Math.abs(from), Math.abs(to))));
     let last = null;
     (function step(now) {
       const p = Math.min((now - t0) / d, 1);
@@ -14372,7 +14474,7 @@ const ShardJackpot = (function () {
     const from = balance;
     balance = v;
     if (animate && countEl) rollUpCounter(countEl, from, v, 600);
-    else if (countEl) countEl.textContent = fmt(v);
+    else if (countEl) { reserveCounterWidth(countEl, fmt(v)); countEl.textContent = fmt(v); }
     displayValue = targetValue = lastRendered = v;
   }
   function getBalance() { ensureDom(); return balance; }
